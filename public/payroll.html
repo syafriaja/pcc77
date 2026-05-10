@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manajemen Gaji - ShinePos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+      }
+
+      /* OPTIMASI PRINT A4 */
+      @media print {
+        @page {
+          size: A4;
+          margin: 0;
+        }
+        body {
+          background: white;
+          margin: 0;
+          padding: 0;
+        }
+        .no-print {
+          display: none !important;
+        }
+        #printArea {
+          display: block !important;
+          visibility: visible !important;
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+        }
+        /* Memastikan warna background (badge) ikut tercetak */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="text-slate-900 antialiased">
+    <div class="max-w-6xl mx-auto no-print">
+      <!-- Breadcrumb & Navigasi -->
+      <div class="mb-6">
+        <a
+          href="/index.html"
+          class="inline-flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-800 transition-all"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="3"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          KEMBALI KE DASHBOARD
+        </a>
+      </div>
+
+      <!-- Header -->
+      <div
+        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+      >
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
+            Manajemen Gaji
+          </h1>
+          <p class="text-slate-500 font-medium text-sm">
+            Rekap bulanan performa S1 & S2.
+          </p>
+        </div>
+        <div
+          class="flex gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200"
+        >
+          <select
+            id="monthSelect"
+            class="bg-transparent font-bold px-3 py-2 outline-none text-sm cursor-pointer"
+          >
+            <option value="1">Januari</option>
+            <option value="2">Februari</option>
+            <option value="3">Maret</option>
+            <option value="4">April</option>
+            <option value="5">Mei</option>
+            <option value="6">Juni</option>
+            <option value="7">Juli</option>
+            <option value="8">Agustus</option>
+            <option value="9">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+          </select>
+          <select
+            id="yearSelect"
+            class="bg-transparent font-bold px-3 py-2 border-l border-slate-200 outline-none text-sm cursor-pointer"
+          ></select>
+          <button
+            onclick="loadPayrollData()"
+            class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all text-sm"
+          >
+            Tampilkan
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabel Monitoring -->
+      <div
+        class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+      >
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 border-b border-slate-100">
+            <tr>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                Karyawan
+              </th>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center"
+              >
+                Unit (M / T)
+              </th>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                Hasil S1
+              </th>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                Hasil S2
+              </th>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                Total Gaji
+              </th>
+              <th
+                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
+              >
+                Aksi
+              </th>
+            </tr>
+          </thead>
+          <tbody id="payrollTableBody" class="divide-y divide-slate-50">
+            <tr>
+              <td
+                colspan="6"
+                class="p-20 text-center text-slate-400 italic text-sm"
+              >
+                Silakan pilih periode dan klik Tampilkan.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- AREA SLIP GAJI (HIDDEN DI LAYAR) -->
+    <div id="printArea" class="hidden"></div>
+
+    <script>
+      // Setup Tahun
+      const ySel = document.getElementById("yearSelect");
+      const now = new Date();
+      for (let i = now.getFullYear() - 1; i <= now.getFullYear() + 1; i++) {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.innerText = i;
+        if (i === now.getFullYear()) opt.selected = true;
+        ySel.appendChild(opt);
+      }
+      document.getElementById("monthSelect").value = now.getMonth() + 1;
+
+      let payrollData = [];
+      const formatIDR = (n) =>
+        new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(n || 0);
+
+      async function loadPayrollData() {
+        const m = document.getElementById("monthSelect").value;
+        const y = document.getElementById("yearSelect").value;
+        const tbody = document.getElementById("payrollTableBody");
+
+        tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center font-bold text-indigo-600 animate-pulse">Menghitung data...</td></tr>`;
+
+        try {
+          const res = await fetch(
+            `/api/admin/payroll-recap?month=${m}&year=${y}`,
+          );
+          payrollData = await res.json();
+
+          if (payrollData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">Data tidak ditemukan.</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = payrollData
+            .map(
+              (row, idx) => `
+                <tr class="hover:bg-slate-50 transition-all">
+                    <td class="p-6 font-bold text-slate-900">${row.name}</td>
+                    <td class="p-6 text-center text-sm font-semibold text-slate-600">
+                        <span class="text-blue-600">${row.m} M</span> / <span class="text-orange-600">${row.t} T</span>
+                    </td>
+                    <td class="p-6 text-xs text-slate-400">${formatIDR(row.s1)}</td>
+                    <td class="p-6 text-xs text-slate-400">${formatIDR(row.s2)}</td>
+                    <td class="p-6 font-black text-indigo-600 text-lg">${formatIDR(row.final_salary)}</td>
+                    <td class="p-6 text-right">
+                        <button onclick="printSlip(${idx})" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all">
+                            PRINT SLIP
+                        </button>
+                    </td>
+                </tr>
+            `,
+            )
+            .join("");
+        } catch (err) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-red-500 font-bold">Gagal memuat data.</td></tr>`;
+        }
+      }
+
+      function printSlip(idx) {
+        const d = payrollData[idx];
+        const mText =
+          document.getElementById("monthSelect").options[
+            document.getElementById("monthSelect").selectedIndex
+          ].text;
+        const yText = document.getElementById("yearSelect").value;
+
+        const isBonus = d.bonus_akhir >= 0;
+        const statusText = isBonus ? "BONUS" : "PENALTI";
+        const statusColor = isBonus ? "#059669" : "#dc2626";
+        const statusBg = isBonus ? "#ecfdf5" : "#fef2f2";
+        const selectedPath = d.s1 >= d.s2 ? "Jalur 1 (S1)" : "Jalur 2 (S2)";
+
+        const area = document.getElementById("printArea");
+        area.innerHTML = `
+            <div style="width: 100%; max-width: 190mm; margin: 0 auto; padding: 25px; font-family: sans-serif; color: #000; background: #fff;">
+                
+                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 15px;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -1px;">SHINE POS</h1>
+                    <p style="margin: 2px 0; font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #444;">Slip Gaji Karyawan Resmi</p>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div>
+                        <p style="margin: 0; font-size: 9px; color: #666; font-weight: 800; text-transform: uppercase;">Penerima:</p>
+                        <h2 style="margin: 0; font-size: 18px; font-weight: 900;">${d.name.toUpperCase()}</h2>
+                        <p style="margin: 2px 0; font-size: 11px; font-weight: bold;">Periode: ${mText} ${yText}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}; font-weight: 900; font-size: 12px;">
+                            STATUS: ${statusText}
+                        </div>
+                        <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: bold; color: #444;">Produksi: ${d.m} Mobil | ${d.t} Motor</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <div style="flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #888;">HASIL S1</p>
+                        <p style="margin: 2px 0; font-size: 12px; font-weight: 700;">${formatIDR(d.s1)}</p>
+                    </div>
+                    <div style="flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
+                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #888;">HASIL S2</p>
+                        <p style="margin: 2px 0; font-size: 12px; font-weight: 700;">${formatIDR(d.s2)}</p>
+                    </div>
+                    <div style="flex: 1; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #64748b;">JALUR TERPILIH</p>
+                        <p style="margin: 2px 0; font-size: 12px; font-weight: 900; color: #4f46e5;">${selectedPath}</p>
+                    </div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 10px 0; font-weight: 600;">Gaji Pokok</td>
+                        <td style="padding: 10px 0; text-align: right; font-weight: 700;">${formatIDR(1000000)}</td>
+                    </tr>
+                    <tr style="border-bottom: 2px solid #000;">
+                        <td style="padding: 10px 0; font-weight: 600;">${statusText} Performa</td>
+                        <td style="padding: 10px 0; text-align: right; font-weight: 700; color: ${statusColor};">${formatIDR(d.bonus_akhir)}</td>
+                    </tr>
+                    <tr style="background: #000; color: #fff;">
+                        <td style="padding: 12px 10px; font-size: 16px; font-weight: 900;">TOTAL GAJI AKHIR</td>
+                        <td style="padding: 12px 10px; text-align: right; font-size: 18px; font-weight: 900;">${formatIDR(d.final_salary)}</td>
+                    </tr>
+                </table>
+
+                <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 30px;">
+                    <div style="width: 180px;">
+                        <p style="margin: 0 0 40px 0; font-size: 11px; font-weight: bold;">Penerima,</p>
+                        <div style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: 900; font-size: 12px;">${d.name.toUpperCase()}</div>
+                    </div>
+                    <div style="width: 180px;">
+                        <p style="margin: 0 0 40px 0; font-size: 11px; font-weight: bold;">Owner ShinePos,</p>
+                        <div style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: 900; font-size: 12px;">( ............................ )</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #999; font-style: italic; border-top: 1px solid #eee; padding-top: 8px;">
+                    Dicetak otomatis pada ${new Date().toLocaleString("id-ID")}
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      }
+    </script>
+  </body>
+</html>

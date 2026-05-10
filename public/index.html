@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - ShinePos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background-color: #f8fafc;
+      }
+      .btn-active {
+        background-color: #4f46e5 !important;
+        color: white !important;
+        border-color: #4f46e5 !important;
+        transform: scale(0.98);
+      }
+    </style>
+  </head>
+  <body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header & Profil -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1
+            id="welcomeUser"
+            class="text-2xl font-extrabold text-slate-900 tracking-tight"
+          >
+            Halo, User!
+          </h1>
+          <p
+            id="userRoleBadge"
+            class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md uppercase tracking-widest inline-block mt-1"
+          >
+            Role: Loading...
+          </p>
+        </div>
+        <button
+          onclick="logout()"
+          class="text-xs font-bold text-red-500 bg-red-50 px-4 py-2 rounded-xl hover:bg-red-100 transition-all"
+        >
+          LOGOUT
+        </button>
+      </div>
+
+      <!-- Dashboard Stats -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div
+          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
+        >
+          <p
+            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+          >
+            Mobil
+          </p>
+          <h3 id="totalMobil" class="text-2xl font-black text-slate-900">0</h3>
+        </div>
+        <div
+          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
+        >
+          <p
+            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+          >
+            Motor
+          </p>
+          <h3 id="totalMotor" class="text-2xl font-black text-slate-900">0</h3>
+        </div>
+        <div
+          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
+        >
+          <p
+            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+          >
+            Operasional
+          </p>
+          <h3 id="opHours" class="text-xs font-black text-indigo-600 mt-1">
+            --:-- - --:--
+          </h3>
+        </div>
+        <div
+          id="revenueCard"
+          class="hidden bg-slate-900 p-6 rounded-[2rem] shadow-xl"
+        >
+          <p
+            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+          >
+            Omzet Hari Ini
+          </p>
+          <h3 id="todayRevenue" class="text-lg font-black text-white">Rp 0</h3>
+        </div>
+      </div>
+
+      <!-- Main Form -->
+      <div
+        class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 mb-6"
+      >
+        <h2
+          class="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight"
+        >
+          Input Transaksi Baru
+        </h2>
+
+        <form id="transactionForm" class="space-y-6">
+          <!-- Jenis Kendaraan -->
+          <div class="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onclick="selectType('mobil')"
+              id="btnMobil"
+              class="p-6 border-2 border-slate-100 rounded-[1.5rem] font-bold text-slate-400 hover:border-indigo-200 transition-all"
+            >
+              🚗 MOBIL
+            </button>
+            <button
+              type="button"
+              onclick="selectType('motor')"
+              id="btnMotor"
+              class="p-6 border-2 border-slate-100 rounded-[1.5rem] font-bold text-slate-400 hover:border-indigo-200 transition-all"
+            >
+              🏍️ MOTOR
+            </button>
+            <input type="hidden" id="vehicleType" required />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Pilih Petugas -->
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1"
+                >Pilih Petugas</label
+              >
+              <select
+                id="employeeId"
+                class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
+                required
+              >
+                <option value="">Loading...</option>
+              </select>
+            </div>
+            <!-- Input Harga -->
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1"
+                >Harga Cuci (Rp)</label
+              >
+              <input
+                type="number"
+                id="washPrice"
+                placeholder="Contoh: 50000"
+                class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            id="submitBtn"
+            class="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
+          >
+            Simpan Transaksi
+          </button>
+        </form>
+      </div>
+
+      <!-- Navigasi Tambahan -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a
+          href="/rekap-harian.html"
+          class="bg-white p-4 rounded-2xl border border-slate-100 text-center font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+        >
+          📋 LIHAT REKAP HARIAN
+        </a>
+        <a
+          href="/payroll.html"
+          id="payrollLink"
+          class="hidden bg-slate-100 p-4 rounded-2xl text-center font-bold text-slate-900 hover:bg-slate-200 transition-all"
+        >
+          💰 MANAJEMEN GAJI (OWNER)
+        </a>
+      </div>
+    </div>
+
+    <script>
+      // CEK LOGIN
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (!user) window.location.href = "/login.html";
+
+      // Tampilan berdasarkan Role
+      document.getElementById("welcomeUser").innerText =
+        `Halo, ${user.username}!`;
+      document.getElementById("userRoleBadge").innerText = `Role: ${user.role}`;
+
+      if (user.role === "owner") {
+        document.getElementById("revenueCard").classList.remove("hidden");
+        document.getElementById("payrollLink").classList.remove("hidden");
+      }
+
+      // Pilihan Kendaraan
+      function selectType(type) {
+        document.getElementById("vehicleType").value = type;
+        document.getElementById("btnMobil").classList.remove("btn-active");
+        document.getElementById("btnMotor").classList.remove("btn-active");
+
+        if (type === "mobil")
+          document.getElementById("btnMobil").classList.add("btn-active");
+        if (type === "motor")
+          document.getElementById("btnMotor").classList.add("btn-active");
+      }
+
+      // Simpan Transaksi
+      document.getElementById("transactionForm").onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("submitBtn");
+        const type = document.getElementById("vehicleType").value;
+
+        if (!type) return alert("Silakan pilih jenis kendaraan!");
+
+        btn.innerText = "MENYIMPAN...";
+        btn.disabled = true;
+
+        try {
+          const res = await fetch("/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              vehicle_type: type,
+              employee_id: document.getElementById("employeeId").value,
+              price: document.getElementById("washPrice").value,
+            }),
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            alert("Transaksi Berhasil!");
+            document.getElementById("transactionForm").reset();
+            selectType(""); // Reset button color
+            refreshStats(); // Update dashboard stats langsung
+          } else {
+            alert("Gagal: " + data.message);
+          }
+        } catch (err) {
+          alert("Kesalahan koneksi!");
+        } finally {
+          btn.innerText = "Simpan Transaksi";
+          btn.disabled = false;
+        }
+      };
+
+      // Update Statistik Dashboard
+      async function refreshStats() {
+        const today = new Date().toISOString().split("T")[0];
+        try {
+          const res = await fetch(
+            `/api/rekap-harian?date=${today}&role=${user.role}`,
+          );
+          const data = await res.json();
+
+          document.getElementById("totalMobil").innerText =
+            data.summary.mobil || 0;
+          document.getElementById("totalMotor").innerText =
+            data.summary.motor || 0;
+          document.getElementById("opHours").innerText =
+            `${data.summary.startTime} - ${data.summary.lastTime}`;
+
+          if (user.role === "owner") {
+            const formatIDR = (n) =>
+              new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0,
+              }).format(n);
+            document.getElementById("todayRevenue").innerText = formatIDR(
+              data.summary.revenue || 0,
+            );
+          }
+        } catch (e) {
+          console.error("Gagal update statistik.");
+        }
+      }
+
+      function logout() {
+        localStorage.removeItem("user");
+        window.location.href = "/login.html";
+      }
+
+      // Jalankan saat load pertama
+      refreshStats();
+
+      async function loadEmployees() {
+        try {
+          const res = await fetch("/api/employees");
+          const data = await res.json();
+
+          const select = document.getElementById("employeeId");
+
+          // reset dropdown
+          select.innerHTML = '<option value="">Pilih Karyawan...</option>';
+
+          // isi dari database
+          data.forEach((emp) => {
+            const option = document.createElement("option");
+            option.value = emp.id; // ID untuk backend
+            option.textContent = emp.name; // Nama untuk tampilan
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Gagal load employees:", error);
+        }
+      }
+
+      // jalankan saat halaman siap
+      document.addEventListener("DOMContentLoaded", loadEmployees);
+    </script>
+  </body>
+</html>
