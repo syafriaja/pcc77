@@ -249,9 +249,16 @@ app.get("/api/rekap-harian", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
-app.get("*", (req, res) => {
+
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ShinePos running on port ${PORT}`));
+module.exports = app;
+//app.get("*", (req, res) => {
+//res.sendFile(path.join(__dirname, "public", "index.html"));
+//});
+
+//for render
+//const PORT = process.env.PORT || 3000;
+//app.listen(PORT, () => console.log(`ShinePos running on port ${PORT}`));
