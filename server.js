@@ -48,14 +48,15 @@ app.get("/api/employees", async (req, res) => {
 
 // --- TRANSAKSI & AKTIVITAS CUCI ---
 app.post("/api/transactions", async (req, res) => {
-  const { vehicle_type, employee_id, price } = req.body;
+  const { vehicle_type, vehicle_brand, employee_id, price } = req.body;
 
   try {
     const { data, error } = await supabase
       .from("wash_transactions")
       .insert([
         {
-          vehicle_type: vehicle_type.toLowerCase(), // Pastikan huruf kecil
+          vehicle_type: vehicle_type.toLowerCase(),
+          vehicle_brand: vehicle_brand?.trim() || null,
           employee_id: parseInt(employee_id),
           price: parseFloat(price),
         },
@@ -260,6 +261,7 @@ app.get("/api/rekap-harian", async (req, res) => {
           timeZone: "Asia/Makassar",
         }),
         vehicle_type: t.vehicle_type,
+        vehicle_brand: t.vehicle_brand,
         employee_name: t.employees?.name || "N/A",
         price: t.price,
       })),
