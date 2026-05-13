@@ -159,6 +159,10 @@
       </div>
     </div>
 
+    <!-- Script untuk interaktivitas dan koneksi backend -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="/js/realtime.js"></script>
+
     <script>
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) window.location.href = "/login.html";
@@ -247,6 +251,10 @@
       }
 
       loadDailyReport();
+
+      window.addEventListener("refresh-data", () => {
+        loadDailyReport();
+      });
     </script>
   </body>
 </html>

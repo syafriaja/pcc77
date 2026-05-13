@@ -186,6 +186,10 @@
       </div>
     </div>
 
+    <!-- Script untuk interaktivitas dan koneksi backend -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="/js/realtime.js"></script>
+
     <script>
       // CEK LOGIN
       const user = JSON.parse(localStorage.getItem("user"));
@@ -316,6 +320,9 @@
 
       // jalankan saat halaman siap
       document.addEventListener("DOMContentLoaded", loadEmployees);
+      window.addEventListener("refresh-data", () => {
+        refreshStats();
+      });
     </script>
   </body>
 </html>
