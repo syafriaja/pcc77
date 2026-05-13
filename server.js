@@ -223,13 +223,14 @@ app.get("/api/rekap-harian", async (req, res) => {
         ? new Date(data[0].created_at).toLocaleTimeString("id-ID", {
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: "Asia/Makassar",
           })
         : "--:--";
     const lastTime =
       data.length > 0
         ? new Date(data[data.length - 1].created_at).toLocaleTimeString(
             "id-ID",
-            { hour: "2-digit", minute: "2-digit" },
+            { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Makassar" },
           )
         : "--:--";
 
