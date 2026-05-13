@@ -235,6 +235,26 @@
                       <p class="font-black text-slate-900 text-sm">
                         ${t.vehicle_brand || t.vehicle_type}
                       </p>
+                      <div class="mt-1">
+  <span class="
+    px-2 py-1 rounded-full text-[10px] font-black uppercase
+    ${
+      t.status === "selesai"
+        ? "bg-green-100 text-green-600"
+        : t.status === "sedang_dicuci"
+          ? "bg-blue-100 text-blue-600"
+          : "bg-slate-200 text-slate-600"
+    }
+  ">
+    ${
+      t.status === "selesai"
+        ? "✅ Selesai"
+        : t.status === "sedang_dicuci"
+          ? "🧼 Sedang Dicuci"
+          : "⏳ Dalam Antrian"
+    }
+  </span>
+</div>
                       <p class="text-[10px] font-black text-slate-400 uppercase">
                         ${t.vehicle_type}
                       </p>
