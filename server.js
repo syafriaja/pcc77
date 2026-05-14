@@ -115,22 +115,24 @@ app.get("/api/daily-summary", async (req, res) => {
   const today = new Date().toLocaleDateString("en-CA", {
     timeZone: "Asia/Makassar",
   });
-  const start = `${today}T00:00:00.000Z`;
-  const end = `${today}T23:59:59.999Z`;
-  // Ambil Omset
+
+  const start = new Date(`${today}T00:00:00+08:00`).toISOString();
+  const end = new Date(`${today}T23:59:59.999+08:00`).toISOString();
+
   const { data: trxs } = await supabase
     .from("transactions")
     .select("price")
     .gte("created_at", start)
     .lte("created_at", end);
+
   const omset = trxs?.reduce((acc, curr) => acc + Number(curr.price), 0) || 0;
 
-  // Ambil Pengeluaran
   const { data: exps } = await supabase
     .from("operating_expenses")
     .select("amount")
     .gte("created_at", start)
     .lte("created_at", end);
+
   const pengeluaran =
     exps?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
