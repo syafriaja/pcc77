@@ -16,7 +16,8 @@ const supabase = createClient(
 
 app.post("/api/login", async (req, res) => {
   const { username, password } = req.body;
-  console.log(`Mencoba Login: ${username} | ${password}`); // Log input
+  // Catat percobaan login tanpa menampilkan password agar data sensitif tidak masuk log server.
+  console.log(`Mencoba Login: ${username}`);
 
   const { data, error } = await supabase
     .from("users")
