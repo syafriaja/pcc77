@@ -26,7 +26,9 @@ function getMakassarDateString(date = new Date()) {
 // Mengubah tanggal lokal Makassar menjadi rentang UTC agar cocok untuk query Supabase created_at.
 function getMakassarDayRange(dateString) {
   return {
-    start: new Date(`${dateString}T00:00:00.000${APP_UTC_OFFSET}`).toISOString(),
+    start: new Date(
+      `${dateString}T00:00:00.000${APP_UTC_OFFSET}`,
+    ).toISOString(),
     end: new Date(`${dateString}T23:59:59.999${APP_UTC_OFFSET}`).toISOString(),
   };
 }
