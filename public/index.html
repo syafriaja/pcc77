@@ -162,9 +162,11 @@
                 >Harga Cuci (Rp)</label
               >
               <input
-                type="number"
+                type="text"
+                inputmode="numeric"
                 id="washPrice"
-                placeholder="Contoh: 50000"
+                oninput="formatPrice(this)"
+                placeholder="Contoh: Rp 50.000"
                 class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
                 required
               />
@@ -221,7 +223,20 @@
           toast.classList.add("hidden");
         }, 2500);
       }
+      function formatPrice(input) {
+        let value = input.value.replace(/[^0-9]/g, "");
 
+        if (!value) {
+          input.value = "";
+          return;
+        }
+
+        input.value = new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(value);
+      }
       // CEK LOGIN
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) window.location.href = "/login.html";
