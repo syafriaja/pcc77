@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
@@ -11,6 +12,10 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY,
 );
+
+// Secret ini dipakai untuk menandatangani token login sederhana.
+// Di Vercel sebaiknya isi AUTH_TOKEN_SECRET agar token production tidak memakai fallback dev.
+const AUTH_TOKEN_SECRET = process.env.AUTH_TOKEN_SECRET || "dev-secret-change-me";
 
 // Semua rekap operasional dihitung berdasarkan waktu Makassar (WITA / UTC+8).
 const APP_TIMEZONE = "Asia/Makassar";
@@ -63,6 +68,96 @@ const VEHICLE_STATUS_FLOW = {
   sedang_dicuci: "selesai",
 };
 
+// Base64 URL dipakai supaya token aman diletakkan di header Authorization.
+function toBase64Url(value) {
+  return Buffer.from(value).toString("base64url");
+}
+
+// Signature memastikan isi token tidak bisa diubah manual dari browser.
+function signTokenPayload(encodedPayload) {
+  return crypto
+    .createHmac("sha256", AUTH_TOKEN_SECRET)
+    .update(encodedPayload)
+    .digest("base64url");
+}
+
+// Token berlaku sampai akhir hari Makassar agar sesi kasir mengikuti hari operasional.
+function createAuthToken(user) {
+  const today = getMakassarDateString();
+  const { end } = getMakassarDayRange(today);
+  const payload = {
+    username: user.username,
+    role: user.role,
+    exp: new Date(end).getTime(),
+  };
+  const encodedPayload = toBase64Url(JSON.stringify(payload));
+  const signature = signTokenPayload(encodedPayload);
+
+  return `${encodedPayload}.${signature}`;
+}
+
+// Membaca dan memvalidasi token dari header Authorization.
+function readAuthToken(token) {
+  if (!token || !token.includes(".")) return null;
+
+  const [encodedPayload, signature] = token.split(".");
+  const expectedSignature = signTokenPayload(encodedPayload);
+  const signatureBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (
+    signatureBuffer.length !== expectedBuffer.length ||
+    !crypto.timingSafeEqual(signatureBuffer, expectedBuffer)
+  ) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(encodedPayload, "base64url").toString("utf8"),
+    );
+
+    if (!payload.username || !payload.role || Date.now() > payload.exp) {
+      return null;
+    }
+
+    return payload;
+  } catch (error) {
+    return null;
+  }
+}
+
+// Middleware ini memastikan endpoint API hanya bisa dipakai setelah login.
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : "";
+  const user = readAuthToken(token);
+
+  if (!user) {
+    return res.status(401).json({
+      success: false,
+      message: "Silakan login ulang",
+    });
+  }
+
+  req.user = user;
+  next();
+}
+
+// Middleware ini membatasi endpoint sensitif hanya untuk owner.
+function requireOwner(req, res, next) {
+  if (req.user?.role !== "owner") {
+    return res.status(403).json({
+      success: false,
+      message: "Akses hanya untuk owner",
+    });
+  }
+
+  next();
+}
+
 // --- AUTHENTICATION ---
 
 app.post("/api/login", async (req, res) => {
@@ -88,18 +183,19 @@ app.post("/api/login", async (req, res) => {
   console.log("Login Berhasil:", data.username);
   res.json({
     success: true,
+    token: createAuthToken(data),
     user: { username: data.username, role: data.role },
   });
 });
 
 // --- MASTER DATA ---
-app.get("/api/employees", async (req, res) => {
+app.get("/api/employees", requireAuth, async (req, res) => {
   const { data } = await supabase.from("employees").select("*");
   res.json(data);
 });
 
 // --- TRANSAKSI & AKTIVITAS CUCI ---
-app.post("/api/transactions", async (req, res) => {
+app.post("/api/transactions", requireAuth, async (req, res) => {
   const { vehicle_type, vehicle_brand, employee_id, price } = req.body;
 
   try {
@@ -168,7 +264,7 @@ app.post("/api/transactions", async (req, res) => {
   }
 });
 // UPDATE STATUS KENDARAAN
-app.patch("/api/transactions/:id/status", async (req, res) => {
+app.patch("/api/transactions/:id/status", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
@@ -233,7 +329,7 @@ app.patch("/api/transactions/:id/status", async (req, res) => {
   }
 });
 // --- OPERASIONAL HARIAN (OMSET & PENGELUARAN) ---
-app.get("/api/daily-summary", async (req, res) => {
+app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
   // Ringkasan harian memakai tanggal Makassar agar cocok dengan jam operasional toko.
   const today = getMakassarDateString();
   const { start, end } = getMakassarDayRange(today);
@@ -259,7 +355,7 @@ app.get("/api/daily-summary", async (req, res) => {
   res.json({ omset, pengeluaran, profit: omset - pengeluaran });
 });
 
-app.post("/api/expenses", async (req, res) => {
+app.post("/api/expenses", requireAuth, requireOwner, async (req, res) => {
   const { description, amount } = req.body;
 
   // Validasi pengeluaran mencegah nominal kosong/aneh masuk ke laporan operasional.
@@ -290,7 +386,7 @@ app.post("/api/expenses", async (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/api/wash-activity", async (req, res) => {
+app.get("/api/wash-activity", requireAuth, async (req, res) => {
   // Aktivitas cuci hari ini difilter dari jam 00:00 sampai 23:59 versi Makassar.
   const today = getMakassarDateString();
   const { start, end } = getMakassarDayRange(today);
@@ -310,7 +406,7 @@ app.get("/api/wash-activity", async (req, res) => {
 });
 
 // Endpoint Rekap Payroll Khusus Owner
-app.get("/api/admin/payroll-recap", async (req, res) => {
+app.get("/api/admin/payroll-recap", requireAuth, requireOwner, async (req, res) => {
   const { month, year } = req.query;
 
   try {
@@ -378,8 +474,8 @@ app.get("/api/admin/payroll-recap", async (req, res) => {
   }
 });
 
-app.get("/api/rekap-harian", async (req, res) => {
-  let { date, role } = req.query;
+app.get("/api/rekap-harian", requireAuth, async (req, res) => {
+  let { date } = req.query;
 
   // Filter tanggal memakai batas hari Makassar, lalu dikonversi ke UTC untuk Supabase.
   const { start, end } = getMakassarDayRange(date);
@@ -402,7 +498,11 @@ app.get("/api/rekap-harian", async (req, res) => {
     // Hitung Summary
     const mobil = data.filter((t) => t.vehicle_type === "mobil").length;
     const motor = data.filter((t) => t.vehicle_type === "motor").length;
-    const revenue = data.reduce((sum, t) => sum + Number(t.price || 0), 0);
+    // Revenue hanya dikirim ke owner; staf tetap bisa melihat rekap kendaraan tanpa omzet.
+    const revenue =
+      req.user.role === "owner"
+        ? data.reduce((sum, t) => sum + Number(t.price || 0), 0)
+        : null;
 
     const startTime =
       data.length > 0

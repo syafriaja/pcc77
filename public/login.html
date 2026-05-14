@@ -119,6 +119,8 @@
         });
         const data = await res.json();
         if (data.success) {
+          // Token dipakai backend untuk memastikan request berikutnya berasal dari user yang sudah login.
+          localStorage.setItem("token", data.token);
           localStorage.setItem("user", JSON.stringify(data.user));
           window.location.href = "/index.html";
         } else {

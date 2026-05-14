@@ -174,6 +174,35 @@
     <div id="printArea" class="hidden"></div>
 
     <script>
+      // Payroll hanya untuk owner; token dikirim agar backend bisa menolak akses staf.
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+
+      if (!user || !token) {
+        window.location.href = "/login.html";
+        throw new Error("Login diperlukan");
+      } else if (user.role !== "owner") {
+        window.location.href = "/index.html";
+        throw new Error("Akses payroll hanya untuk owner");
+      }
+
+      function authHeaders(extraHeaders = {}) {
+        return {
+          ...extraHeaders,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
+      // Jika token expired, owner diminta login ulang sebelum membuka payroll.
+      function handleAuthExpired(res) {
+        if (res.status === 401) {
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          window.location.href = "/login.html";
+          throw new Error("Sesi login berakhir");
+        }
+      }
+
       // Setup Tahun
       const ySel = document.getElementById("yearSelect");
       const now = new Date();
@@ -204,7 +233,11 @@
         try {
           const res = await fetch(
             `/api/admin/payroll-recap?month=${m}&year=${y}`,
+            {
+              headers: authHeaders(),
+            },
           );
+          handleAuthExpired(res);
           payrollData = await res.json();
 
           if (payrollData.length === 0) {

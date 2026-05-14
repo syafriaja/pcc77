@@ -239,7 +239,29 @@
       }
       // CEK LOGIN
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) window.location.href = "/login.html";
+      const token = localStorage.getItem("token");
+      if (!user || !token) {
+        window.location.href = "/login.html";
+        throw new Error("Login diperlukan");
+      }
+
+      // Header ini dikirim ke API agar backend bisa memverifikasi user yang sedang login.
+      function authHeaders(extraHeaders = {}) {
+        return {
+          ...extraHeaders,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
+      // Jika token sudah expired/invalid, user diarahkan login ulang.
+      function handleAuthExpired(res) {
+        if (res.status === 401) {
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          window.location.href = "/login.html";
+          throw new Error("Sesi login berakhir");
+        }
+      }
 
       // Tampilan berdasarkan Role
       document.getElementById("welcomeUser").innerText =
@@ -277,7 +299,7 @@
         try {
           const res = await fetch("/api/transactions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: authHeaders({ "Content-Type": "application/json" }),
             body: JSON.stringify({
               vehicle_type: type,
               vehicle_brand: document.getElementById("vehicleBrand").value,
@@ -287,6 +309,7 @@
                 .value.replace(/[^0-9]/g, ""), // Hapus karakter non-digit
             }),
           });
+          handleAuthExpired(res);
 
           const data = await res.json();
           if (data.success) {
@@ -313,8 +336,12 @@
         }).format(new Date());
         try {
           const res = await fetch(
-            `/api/rekap-harian?date=${today}&role=${user.role}`,
+            `/api/rekap-harian?date=${today}`,
+            {
+              headers: authHeaders(),
+            },
           );
+          handleAuthExpired(res);
           const data = await res.json();
 
           document.getElementById("totalMobil").innerText =
@@ -342,6 +369,7 @@
 
       function logout() {
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
         window.location.href = "/login.html";
       }
 
@@ -350,7 +378,10 @@
 
       async function loadEmployees() {
         try {
-          const res = await fetch("/api/employees");
+          const res = await fetch("/api/employees", {
+            headers: authHeaders(),
+          });
+          handleAuthExpired(res);
           const data = await res.json();
 
           const select = document.getElementById("employeeId");

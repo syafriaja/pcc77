@@ -271,7 +271,29 @@
 
     <script>
       const user = JSON.parse(localStorage.getItem("user"));
-      if (!user) window.location.href = "/login.html";
+      const token = localStorage.getItem("token");
+      if (!user || !token) {
+        window.location.href = "/login.html";
+        throw new Error("Login diperlukan");
+      }
+
+      // Header ini dikirim ke API agar backend tahu user dan role dari token login.
+      function authHeaders(extraHeaders = {}) {
+        return {
+          ...extraHeaders,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
+      // Jika token sudah expired/invalid, user diarahkan login ulang.
+      function handleAuthExpired(res) {
+        if (res.status === 401) {
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+          window.location.href = "/login.html";
+          throw new Error("Sesi login berakhir");
+        }
+      }
 
       // Default tanggal rekap mengikuti Makassar agar cocok dengan rekap backend.
       const today = new Intl.DateTimeFormat("en-CA", {
@@ -307,8 +329,12 @@
 
         try {
           const res = await fetch(
-            `/api/rekap-harian?date=${date}&role=${user.role}`,
+            `/api/rekap-harian?date=${date}`,
+            {
+              headers: authHeaders(),
+            },
           );
+          handleAuthExpired(res);
           const data = await res.json();
 
           if (data.transactions.length === 0) {
@@ -472,13 +498,14 @@
         try {
           const res = await fetch(`/api/transactions/${id}/status`, {
             method: "PATCH",
-            headers: {
+            headers: authHeaders({
               "Content-Type": "application/json",
-            },
+            }),
             body: JSON.stringify({
               status: nextStatus,
             }),
           });
+          handleAuthExpired(res);
 
           const data = await res.json();
 
