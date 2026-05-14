@@ -49,6 +49,20 @@ function getMakassarMonthRange(month, year) {
   };
 }
 
+// Mengirim error validasi dengan format yang konsisten untuk frontend.
+function sendValidationError(res, message) {
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+}
+
+// Urutan status kendaraan dibuat ketat agar status tidak bisa lompat atau diisi nilai sembarang.
+const VEHICLE_STATUS_FLOW = {
+  dalam_antrian: "sedang_dicuci",
+  sedang_dicuci: "selesai",
+};
+
 // --- AUTHENTICATION ---
 
 app.post("/api/login", async (req, res) => {
@@ -89,15 +103,53 @@ app.post("/api/transactions", async (req, res) => {
   const { vehicle_type, vehicle_brand, employee_id, price } = req.body;
 
   try {
+    // Validasi backend tetap diperlukan walaupun input frontend sudah memakai required.
+    const normalizedVehicleType =
+      typeof vehicle_type === "string" ? vehicle_type.toLowerCase().trim() : "";
+    const normalizedBrand =
+      typeof vehicle_brand === "string" ? vehicle_brand.trim() : "";
+    const employeeId = Number(employee_id);
+    const parsedPrice = Number(price);
+
+    if (!["mobil", "motor"].includes(normalizedVehicleType)) {
+      return sendValidationError(res, "Jenis kendaraan harus mobil atau motor");
+    }
+
+    if (!normalizedBrand || normalizedBrand.length > 80) {
+      return sendValidationError(
+        res,
+        "Merek kendaraan wajib diisi dan maksimal 80 karakter",
+      );
+    }
+
+    if (!Number.isInteger(employeeId) || employeeId <= 0) {
+      return sendValidationError(res, "Petugas tidak valid");
+    }
+
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      return sendValidationError(res, "Harga harus lebih dari 0");
+    }
+
+    // Pastikan transaksi hanya memakai petugas yang benar-benar ada di tabel employees.
+    const { data: employee, error: employeeError } = await supabase
+      .from("employees")
+      .select("id")
+      .eq("id", employeeId)
+      .single();
+
+    if (employeeError || !employee) {
+      return sendValidationError(res, "Petugas tidak ditemukan");
+    }
+
     const { data, error } = await supabase
       .from("wash_transactions")
       .insert([
         {
-          vehicle_type: vehicle_type.toLowerCase(),
-          vehicle_brand: vehicle_brand?.trim() || null,
+          vehicle_type: normalizedVehicleType,
+          vehicle_brand: normalizedBrand,
           status: "dalam_antrian",
-          employee_id: parseInt(employee_id),
-          price: parseFloat(price),
+          employee_id: employeeId,
+          price: parsedPrice,
         },
       ])
       .select();
@@ -121,10 +173,42 @@ app.patch("/api/transactions/:id/status", async (req, res) => {
   const { status } = req.body;
 
   try {
+    // Validasi id dan status sebelum menyentuh database.
+    const transactionId = Number(id);
+    const nextStatus = typeof status === "string" ? status.trim() : "";
+
+    if (!Number.isInteger(transactionId) || transactionId <= 0) {
+      return sendValidationError(res, "ID transaksi tidak valid");
+    }
+
+    if (!Object.values(VEHICLE_STATUS_FLOW).includes(nextStatus)) {
+      return sendValidationError(res, "Status tujuan tidak valid");
+    }
+
+    // Ambil status saat ini agar server bisa memastikan urutannya benar.
+    const { data: transaction, error: findError } = await supabase
+      .from("wash_transactions")
+      .select("id, status")
+      .eq("id", transactionId)
+      .single();
+
+    if (findError || !transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Transaksi tidak ditemukan",
+      });
+    }
+
+    const allowedNextStatus = VEHICLE_STATUS_FLOW[transaction.status];
+
+    if (allowedNextStatus !== nextStatus) {
+      return sendValidationError(res, "Perubahan status tidak sesuai urutan");
+    }
+
     const { error } = await supabase
       .from("wash_transactions")
-      .update({ status })
-      .eq("id", id);
+      .update({ status: nextStatus })
+      .eq("id", transactionId);
 
     if (error) {
       console.error("Update Status Error:", error.message);
@@ -177,7 +261,32 @@ app.get("/api/daily-summary", async (req, res) => {
 
 app.post("/api/expenses", async (req, res) => {
   const { description, amount } = req.body;
-  await supabase.from("operating_expenses").insert([{ description, amount }]);
+
+  // Validasi pengeluaran mencegah nominal kosong/aneh masuk ke laporan operasional.
+  const normalizedDescription =
+    typeof description === "string" ? description.trim() : "";
+  const parsedAmount = Number(amount);
+
+  if (!normalizedDescription || normalizedDescription.length > 120) {
+    return sendValidationError(
+      res,
+      "Deskripsi pengeluaran wajib diisi dan maksimal 120 karakter",
+    );
+  }
+
+  if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    return sendValidationError(res, "Nominal pengeluaran harus lebih dari 0");
+  }
+
+  const { error } = await supabase
+    .from("operating_expenses")
+    .insert([{ description: normalizedDescription, amount: parsedAmount }]);
+
+  if (error) {
+    console.error("Insert Expense Error:", error.message);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+
   res.json({ success: true });
 });
 
