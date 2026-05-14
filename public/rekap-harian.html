@@ -116,49 +116,102 @@
         </div>
       </div>
 
-      <!-- Table -->
-      <div
-        class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
-      >
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead class="bg-slate-50 border-b border-slate-100">
-              <tr>
-                <th
-                  class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                >
-                  Waktu
-                </th>
-                <th
-                  class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                >
-                  Kendaraan
-                </th>
-                <th
-                  class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                >
-                  Petugas
-                </th>
-                <th
-                  class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                >
-                  Harga
-                </th>
-                <th
-                  class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
-                >
-                  Metode
-                </th>
-              </tr>
-            </thead>
-            <tbody id="reportTableBody" class="divide-y divide-slate-50">
-              <!-- Data Masuk Disini -->
-            </tbody>
-          </table>
+      <!-- Table Kendaraan Aktif -->
+      <div class="mb-8">
+        <h2 class="text-lg font-black text-slate-900 mb-4 uppercase">
+          Kendaraan Aktif
+        </h2>
+
+        <div
+          class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Waktu
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Kendaraan
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Petugas
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Harga
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
+                  >
+                    Metode
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="activeTableBody" class="divide-y divide-slate-50">
+                <!-- Kendaraan aktif masuk di sini -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Kendaraan Selesai -->
+      <div>
+        <h2 class="text-lg font-black text-slate-900 mb-4 uppercase">
+          Kendaraan Selesai
+        </h2>
+
+        <div
+          class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 border-b border-slate-100">
+                <tr>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Waktu
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Kendaraan
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Petugas
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >
+                    Harga
+                  </th>
+                  <th
+                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
+                  >
+                    Metode
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="completedTableBody" class="divide-y divide-slate-50">
+                <!-- Kendaraan selesai masuk di sini -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-
     <!-- Script untuk interaktivitas dan koneksi backend -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="/js/realtime.js"></script>
@@ -178,7 +231,8 @@
 
       async function loadDailyReport() {
         const date = document.getElementById("reportDate").value;
-        const tbody = document.getElementById("reportTableBody");
+        const activeTbody = document.getElementById("activeTableBody");
+        const completedTbody = document.getElementById("completedTableBody");
         const formatIDR = (n) =>
           new Intl.NumberFormat("id-ID", {
             style: "currency",
@@ -202,7 +256,22 @@
           const data = await res.json();
 
           if (data.transactions.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="p-20 text-center text-slate-400 italic">Belum ada aktivitas pada tanggal ini.</td></tr>`;
+            activeTbody.innerHTML = `
+                    <tr>
+                      <td colspan="5" class="p-20 text-center text-slate-400 italic">
+                        Belum ada kendaraan aktif.
+                      </td>
+                    </tr>
+                  `;
+
+            completedTbody.innerHTML = `
+                    <tr>
+                      <td colspan="5" class="p-20 text-center text-slate-400 italic">
+                        Belum ada kendaraan selesai.
+                      </td>
+                    </tr>
+                  `;
+
             resetStats();
             return;
           }
@@ -221,55 +290,107 @@
           }
 
           // Update Tabel
-          tbody.innerHTML = data.transactions
+          const activeTransactions = data.transactions.filter(
+            (t) => t.status !== "selesai",
+          );
+
+          const completedTransactions = data.transactions.filter(
+            (t) => t.status === "selesai",
+          );
+
+          activeTbody.innerHTML = activeTransactions
             .map(
               (t) => `
-                <tr class="hover:bg-slate-50 transition-all">
-                    <td class="p-6 font-bold text-slate-900">${t.time}</td>
-                    <td class="p-6">
-                      <div class="flex items-center gap-2">
-                      <span class="text-lg">
-                        ${t.vehicle_type === "mobil" ? "🚗" : "🏍️"}
+                                <tr class="hover:bg-slate-50 transition-all">
+                                    <td class="p-6 font-bold text-slate-900">${t.time}</td>
+                                    <td class="p-6">
+                                      <div class="flex items-center gap-2">
+                                      <span class="text-lg">
+                                        ${t.vehicle_type === "mobil" ? "🚗" : "🏍️"}
+                                      </span>
+                                      <div>
+                                      <p class="font-black text-slate-900 text-sm">
+                                        ${t.vehicle_brand || t.vehicle_type}
+                                      </p>
+                                      <div class="mt-1">
+                 <button
+                  onclick="this.disabled = true; this.innerText = 'Memproses...'; updateVehicleStatus(${t.id}, '${t.status}')"
+                  class="
+                    px-2 py-1 rounded-full text-[10px] font-black uppercase transition-all hover:scale-105
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    ${
+                      t.status === "selesai"
+                        ? "bg-green-100 text-green-600 cursor-default"
+                        : t.status === "sedang_dicuci"
+                          ? "bg-blue-100 text-blue-600"
+                          : "bg-slate-200 text-slate-600"
+                    }
+                  "
+                >
+                  ${
+                    t.status === "selesai"
+                      ? "✅ Selesai"
+                      : t.status === "sedang_dicuci"
+                        ? "🧼 Sedang Dicuci"
+                        : "⏳ Dalam Antrian"
+                  }
+                </button>
+                </div>
+                                      <p class="text-[10px] font-black text-slate-400 uppercase">
+                                        ${t.vehicle_type}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </td>
+                                    <td class="p-6 font-semibold text-slate-600 text-sm">${t.employee_name}</td>
+                                    <td class="p-6 font-bold text-slate-900 text-sm">${formatIDR(t.price)}</td>
+                                    <td class="p-6 text-right font-black text-slate-400 text-[10px] uppercase">Cash</td>
+                                </tr>
+                            `,
+            )
+            .join("");
+          completedTbody.innerHTML = completedTransactions
+            .map(
+              (t) => `
+          <tr class="hover:bg-slate-50 transition-all opacity-80">
+              <td class="p-6 font-bold text-slate-900">${t.time}</td>
+              <td class="p-6">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">
+                    ${t.vehicle_type === "mobil" ? "🚗" : "🏍️"}
+                  </span>
+
+                  <div>
+                    <p class="font-black text-slate-900 text-sm">
+                      ${t.vehicle_brand || t.vehicle_type}
+                    </p>
+
+                    <div class="mt-1">
+                      <span class="px-2 py-1 rounded-full text-[10px] font-black uppercase bg-green-100 text-green-600">
+                        ✅ Selesai
                       </span>
-                      <div>
-                      <p class="font-black text-slate-900 text-sm">
-                        ${t.vehicle_brand || t.vehicle_type}
-                      </p>
-                      <div class="mt-1">
- <button
-  onclick="this.disabled = true; this.innerText = 'Memproses...'; updateVehicleStatus(${t.id}, '${t.status}')"
-  class="
-    px-2 py-1 rounded-full text-[10px] font-black uppercase transition-all hover:scale-105
-    disabled:opacity-50 disabled:cursor-not-allowed
-    ${
-      t.status === "selesai"
-        ? "bg-green-100 text-green-600 cursor-default"
-        : t.status === "sedang_dicuci"
-          ? "bg-blue-100 text-blue-600"
-          : "bg-slate-200 text-slate-600"
-    }
-  "
->
-  ${
-    t.status === "selesai"
-      ? "✅ Selesai"
-      : t.status === "sedang_dicuci"
-        ? "🧼 Sedang Dicuci"
-        : "⏳ Dalam Antrian"
-  }
-</button>
-</div>
-                      <p class="text-[10px] font-black text-slate-400 uppercase">
-                        ${t.vehicle_type}
-                      </p>
                     </div>
+
+                    <p class="text-[10px] font-black text-slate-400 uppercase">
+                      ${t.vehicle_type}
+                    </p>
                   </div>
-                </td>
-                    <td class="p-6 font-semibold text-slate-600 text-sm">${t.employee_name}</td>
-                    <td class="p-6 font-bold text-slate-900 text-sm">${formatIDR(t.price)}</td>
-                    <td class="p-6 text-right font-black text-slate-400 text-[10px] uppercase">Cash</td>
-                </tr>
-            `,
+                </div>
+              </td>
+
+              <td class="p-6 font-semibold text-slate-600 text-sm">
+                ${t.employee_name}
+              </td>
+
+              <td class="p-6 font-bold text-slate-900 text-sm">
+                ${formatIDR(t.price)}
+              </td>
+
+              <td class="p-6 text-right font-black text-slate-400 text-[10px] uppercase">
+                Cash
+              </td>
+          </tr>
+      `,
             )
             .join("");
         } catch (e) {
