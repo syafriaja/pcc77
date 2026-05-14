@@ -118,6 +118,7 @@ app.get("/api/daily-summary", async (req, res) => {
 
   const start = new Date(`${today}T00:00:00+08:00`).toISOString();
   const end = new Date(`${today}T23:59:59.999+08:00`).toISOString();
+  console.log("today", today, "start", start, "end", end);
 
   const { data: trxs } = await supabase
     .from("transactions")
