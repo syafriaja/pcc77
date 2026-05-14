@@ -203,7 +203,25 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="/js/realtime.js"></script>
 
+    <!-- Toast Notification -->
+    <div
+      id="toast"
+      class="fixed top-5 right-5 z-50 hidden opacity-0 -translate-y-2 px-5 py-3 rounded-2xl shadow-lg text-sm font-bold bg-green-600 text-white transition-all duration-300"
+    >
+      Berhasil disimpan
+    </div>
     <script>
+      function showToast(message = "Berhasil disimpan") {
+        const toast = document.getElementById("toast");
+
+        toast.innerText = message;
+        toast.classList.remove("hidden");
+
+        setTimeout(() => {
+          toast.classList.add("hidden");
+        }, 2500);
+      }
+
       // CEK LOGIN
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) window.location.href = "/login.html";
@@ -249,13 +267,15 @@
               vehicle_type: type,
               vehicle_brand: document.getElementById("vehicleBrand").value,
               employee_id: document.getElementById("employeeId").value,
-              price: document.getElementById("washPrice").value,
+              price: document
+                .getElementById("washPrice")
+                .value.replace(/[^0-9]/g, ""), // Hapus karakter non-digit
             }),
           });
 
           const data = await res.json();
           if (data.success) {
-            alert("Transaksi Berhasil!");
+            showToast("Kendaraan berhasil ditambahkan");
             document.getElementById("transactionForm").reset();
             selectType(""); // Reset button color
             refreshStats(); // Update dashboard stats langsung
