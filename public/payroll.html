@@ -257,7 +257,7 @@
                     <td class="p-6 text-xs text-slate-400">${formatIDR(row.s2)}</td>
                     <td class="p-6 font-black text-indigo-600 text-lg">${formatIDR(row.final_salary)}</td>
                     <td class="p-6 text-right">
-                        <button onclick="printSlip(${idx})" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all">
+                        <button type="button" data-print-index="${idx}" class="print-slip-btn bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all cursor-pointer">
                             PRINT SLIP
                         </button>
                     </td>
@@ -272,6 +272,12 @@
 
       function printSlip(idx) {
         const d = payrollData[idx];
+
+        if (!d) {
+          alert("Data slip tidak ditemukan. Silakan klik Tampilkan ulang.");
+          return;
+        }
+
         const mText =
           document.getElementById("monthSelect").options[
             document.getElementById("monthSelect").selectedIndex
@@ -279,10 +285,14 @@
         const yText = document.getElementById("yearSelect").value;
 
         const isBonus = d.bonus_akhir >= 0;
-        const statusText = isBonus ? "BONUS" : "PENALTI";
+        const statusText = isBonus ? "BONUS TARGET" : "PENALTI TARGET";
+        const statusDescription = isBonus
+          ? "Tambahan dari kendaraan di atas target"
+          : "Kekurangan dari target kendaraan";
         const statusColor = isBonus ? "#059669" : "#dc2626";
         const statusBg = isBonus ? "#ecfdf5" : "#fef2f2";
         const selectedPath = d.s1 >= d.s2 ? "Jalur 1 (S1)" : "Jalur 2 (S2)";
+        const adjustmentValue = `${isBonus ? "+" : "-"}${formatIDR(Math.abs(d.bonus_akhir))}`;
 
         const area = document.getElementById("printArea");
         area.innerHTML = `
@@ -324,18 +334,29 @@
 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
                     <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; font-weight: 600;">Gaji Pokok</td>
+                        <td style="padding: 10px 0; font-weight: 600;">
+                          Pendapatan Dasar Target
+                          <div style="font-size: 9px; color: #777; font-weight: 500; margin-top: 2px;">Nominal dasar berdasarkan target kendaraan</div>
+                        </td>
                         <td style="padding: 10px 0; text-align: right; font-weight: 700;">${formatIDR(1000000)}</td>
                     </tr>
                     <tr style="border-bottom: 2px solid #000;">
-                        <td style="padding: 10px 0; font-weight: 600;">${statusText} Performa</td>
-                        <td style="padding: 10px 0; text-align: right; font-weight: 700; color: ${statusColor};">${formatIDR(d.bonus_akhir)}</td>
+                        <td style="padding: 10px 0; font-weight: 600;">
+                          ${statusText}
+                          <div style="font-size: 9px; color: #777; font-weight: 500; margin-top: 2px;">${statusDescription}</div>
+                        </td>
+                        <td style="padding: 10px 0; text-align: right; font-weight: 800; color: ${statusColor};">${adjustmentValue}</td>
                     </tr>
                     <tr style="background: #000; color: #fff;">
                         <td style="padding: 12px 10px; font-size: 16px; font-weight: 900;">TOTAL GAJI AKHIR</td>
                         <td style="padding: 12px 10px; text-align: right; font-size: 18px; font-weight: 900;">${formatIDR(d.final_salary)}</td>
                     </tr>
                 </table>
+
+                <div style="border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin: -6px 0 20px 0;">
+                    <p style="margin: 0 0 3px 0; font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #334155;">KETERANGAN</p>
+                    <p style="margin: 0; font-size: 10px; font-weight: 600; color: #475569;">Pendapatan dasar dihitung berdasarkan pencapaian target operasional kendaraan.</p>
+                </div>
 
                 <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 30px;">
                     <div style="width: 180px;">
@@ -354,10 +375,22 @@
             </div>
         `;
 
-        setTimeout(() => {
-          window.print();
-        }, 300);
+        window.print();
       }
+
+      // Event delegation membuat tombol PRINT SLIP tetap bisa diklik walaupun baris tabel dibuat ulang.
+      document
+        .getElementById("payrollTableBody")
+        .addEventListener("click", (event) => {
+          const button = event.target.closest(".print-slip-btn");
+
+          if (!button) return;
+
+          printSlip(Number(button.dataset.printIndex));
+        });
+
+      // Expose fungsi ini agar tetap tersedia jika browser membaca handler dari atribut HTML.
+      window.printSlip = printSlip;
     </script>
   </body>
 </html>
