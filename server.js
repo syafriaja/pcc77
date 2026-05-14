@@ -12,6 +12,41 @@ const supabase = createClient(
   process.env.SUPABASE_KEY,
 );
 
+// Semua rekap operasional dihitung berdasarkan waktu Makassar (WITA / UTC+8).
+const APP_TIMEZONE = "Asia/Makassar";
+const APP_UTC_OFFSET = "+08:00";
+
+// Menghasilkan tanggal hari ini versi Makassar dalam format YYYY-MM-DD.
+function getMakassarDateString(date = new Date()) {
+  return date.toLocaleDateString("en-CA", {
+    timeZone: APP_TIMEZONE,
+  });
+}
+
+// Mengubah tanggal lokal Makassar menjadi rentang UTC agar cocok untuk query Supabase created_at.
+function getMakassarDayRange(dateString) {
+  return {
+    start: new Date(`${dateString}T00:00:00.000${APP_UTC_OFFSET}`).toISOString(),
+    end: new Date(`${dateString}T23:59:59.999${APP_UTC_OFFSET}`).toISOString(),
+  };
+}
+
+// Menghasilkan rentang awal-akhir bulan berdasarkan kalender Makassar, bukan UTC.
+function getMakassarMonthRange(month, year) {
+  const monthNumber = Number(month);
+  const yearNumber = Number(year);
+  const lastDay = new Date(yearNumber, monthNumber, 0).getDate();
+
+  return {
+    start: new Date(
+      `${yearNumber}-${String(monthNumber).padStart(2, "0")}-01T00:00:00.000${APP_UTC_OFFSET}`,
+    ).toISOString(),
+    end: new Date(
+      `${yearNumber}-${String(monthNumber).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}T23:59:59.999${APP_UTC_OFFSET}`,
+    ).toISOString(),
+  };
+}
+
 // --- AUTHENTICATION ---
 
 app.post("/api/login", async (req, res) => {
@@ -113,12 +148,9 @@ app.patch("/api/transactions/:id/status", async (req, res) => {
 });
 // --- OPERASIONAL HARIAN (OMSET & PENGELUARAN) ---
 app.get("/api/daily-summary", async (req, res) => {
-  const today = new Date().toLocaleDateString("en-CA", {
-    timeZone: "Asia/Makassar",
-  });
-
-  const start = new Date(`${today}T00:00:00+08:00`).toISOString();
-  const end = new Date(`${today}T23:59:59.999+08:00`).toISOString();
+  // Ringkasan harian memakai tanggal Makassar agar cocok dengan jam operasional toko.
+  const today = getMakassarDateString();
+  const { start, end } = getMakassarDayRange(today);
   console.log("today", today, "start", start, "end", end);
 
   const { data: trxs } = await supabase
@@ -148,11 +180,9 @@ app.post("/api/expenses", async (req, res) => {
 });
 
 app.get("/api/wash-activity", async (req, res) => {
-  const today = new Date().toLocaleDateString("sv-SE", {
-    timeZone: "Asia/Makassar",
-  });
-  const start = `${today}T00:00:00.000Z`;
-  const end = `${today}T23:59:59.999Z`;
+  // Aktivitas cuci hari ini difilter dari jam 00:00 sampai 23:59 versi Makassar.
+  const today = getMakassarDateString();
+  const { start, end } = getMakassarDayRange(today);
   const { data: logs } = await supabase
     .from("wash_transactions")
     .select("*, employees(name)")
@@ -180,15 +210,11 @@ app.get("/api/admin/payroll-recap", async (req, res) => {
 
     if (empError) throw empError;
 
-    // 2. Tentukan rentang waktu bulan yang dipilih
-    const startDate = new Date(
-      Date.UTC(year, month - 1, 1, 0, 0, 0),
-    ).toISOString();
-
-    const lastDay = new Date(year, month, 0).getDate();
-    const endDate = new Date(
-      Date.UTC(year, month, 0, 23, 59, 59),
-    ).toISOString(); // Tanggal terakhir bulan tersebut
+    // 2. Tentukan rentang bulan berdasarkan timezone Makassar agar payroll tidak bergeser tanggal.
+    const { start: startDate, end: endDate } = getMakassarMonthRange(
+      month,
+      year,
+    );
 
     // 3. Ambil transaksi cucian pada periode tersebut
     const { data: transactions, error: transError } = await supabase
@@ -244,9 +270,8 @@ app.get("/api/admin/payroll-recap", async (req, res) => {
 app.get("/api/rekap-harian", async (req, res) => {
   let { date, role } = req.query;
 
-  // Pastikan filter tanggal tepat (YYYY-MM-DD)
-  const start = new Date(`${date}T00:00:00.000Z`).toISOString();
-  const end = new Date(`${date}T23:59:59.999Z`).toISOString();
+  // Filter tanggal memakai batas hari Makassar, lalu dikonversi ke UTC untuk Supabase.
+  const { start, end } = getMakassarDayRange(date);
 
   try {
     const { data, error } = await supabase

@@ -307,7 +307,10 @@
 
       // Update Statistik Dashboard
       async function refreshStats() {
-        const today = new Date().toISOString().split("T")[0];
+        // Tanggal dashboard harus mengikuti Makassar, bukan UTC dari toISOString().
+        const today = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Makassar",
+        }).format(new Date());
         try {
           const res = await fetch(
             `/api/rekap-harian?date=${today}&role=${user.role}`,

@@ -273,7 +273,10 @@
       const user = JSON.parse(localStorage.getItem("user"));
       if (!user) window.location.href = "/login.html";
 
-      const today = new Date().toISOString().split("T")[0];
+      // Default tanggal rekap mengikuti Makassar agar cocok dengan rekap backend.
+      const today = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Makassar",
+      }).format(new Date());
       document.getElementById("reportDate").value = today;
 
       // Tampilan khusus Owner
