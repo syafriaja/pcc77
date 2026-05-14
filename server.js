@@ -57,6 +57,7 @@ app.post("/api/transactions", async (req, res) => {
         {
           vehicle_type: vehicle_type.toLowerCase(),
           vehicle_brand: vehicle_brand?.trim() || null,
+          status: "dalam_antrian",
           employee_id: parseInt(employee_id),
           price: parseFloat(price),
         },
@@ -74,6 +75,39 @@ app.post("/api/transactions", async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Terjadi kesalahan pada server" });
+  }
+});
+// UPDATE STATUS KENDARAAN
+app.patch("/api/transactions/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const { error } = await supabase
+      .from("wash_transactions")
+      .update({ status })
+      .eq("id", id);
+
+    if (error) {
+      console.error("Update Status Error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Status berhasil diupdate",
+    });
+  } catch (e) {
+    console.error("Server Error:", e.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Terjadi kesalahan server",
+    });
   }
 });
 // --- OPERASIONAL HARIAN (OMSET & PENGELUARAN) ---
@@ -255,6 +289,7 @@ app.get("/api/rekap-harian", async (req, res) => {
     res.json({
       summary: { mobil, motor, revenue, startTime, lastTime },
       transactions: data.map((t) => ({
+        id: t.id,
         time: new Date(t.created_at).toLocaleTimeString("id-ID", {
           hour: "2-digit",
           minute: "2-digit",
@@ -262,6 +297,7 @@ app.get("/api/rekap-harian", async (req, res) => {
         }),
         vehicle_type: t.vehicle_type,
         vehicle_brand: t.vehicle_brand,
+        status: t.status,
         employee_name: t.employees?.name || "N/A",
         price: t.price,
       })),
