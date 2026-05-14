@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
@@ -15,7 +16,8 @@ const supabase = createClient(
 
 // Secret ini dipakai untuk menandatangani token login sederhana.
 // Di Vercel sebaiknya isi AUTH_TOKEN_SECRET agar token production tidak memakai fallback dev.
-const AUTH_TOKEN_SECRET = process.env.AUTH_TOKEN_SECRET || "dev-secret-change-me";
+const AUTH_TOKEN_SECRET =
+  process.env.AUTH_TOKEN_SECRET || "dev-secret-change-me";
 
 // Semua rekap operasional dihitung berdasarkan waktu Makassar (WITA / UTC+8).
 const APP_TIMEZONE = "Asia/Makassar";
@@ -165,15 +167,30 @@ app.post("/api/login", async (req, res) => {
   // Catat percobaan login tanpa menampilkan password agar data sensitif tidak masuk log server.
   console.log(`Mencoba Login: ${username}`);
 
+  if (typeof username !== "string" || typeof password !== "string") {
+    return sendValidationError(res, "Username dan password wajib diisi");
+  }
+
   const { data, error } = await supabase
     .from("users")
-    .select("*")
+    .select("username, role, password, password_hash")
     .eq("username", username)
-    .eq("password", password)
     .single();
 
   if (error) {
     console.error("Supabase Error:", error.message); // Lihat error spesifiknya di terminal
+    return res.status(401).json({
+      success: false,
+      message: "User tidak ditemukan atau password salah",
+    });
+  }
+
+  // Login baru memakai password_hash. Kolom password lama hanya fallback sementara saat migrasi.
+  const passwordValid = data.password_hash
+    ? await bcrypt.compare(password, data.password_hash)
+    : password === data.password;
+
+  if (!passwordValid) {
     return res.status(401).json({
       success: false,
       message: "User tidak ditemukan atau password salah",
@@ -406,73 +423,78 @@ app.get("/api/wash-activity", requireAuth, async (req, res) => {
 });
 
 // Endpoint Rekap Payroll Khusus Owner
-app.get("/api/admin/payroll-recap", requireAuth, requireOwner, async (req, res) => {
-  const { month, year } = req.query;
+app.get(
+  "/api/admin/payroll-recap",
+  requireAuth,
+  requireOwner,
+  async (req, res) => {
+    const { month, year } = req.query;
 
-  try {
-    // 1. Ambil data semua karyawan
-    const { data: employees, error: empError } = await supabase
-      .from("employees")
-      .select("id, name");
+    try {
+      // 1. Ambil data semua karyawan
+      const { data: employees, error: empError } = await supabase
+        .from("employees")
+        .select("id, name");
 
-    if (empError) throw empError;
+      if (empError) throw empError;
 
-    // 2. Tentukan rentang bulan berdasarkan timezone Makassar agar payroll tidak bergeser tanggal.
-    const { start: startDate, end: endDate } = getMakassarMonthRange(
-      month,
-      year,
-    );
+      // 2. Tentukan rentang bulan berdasarkan timezone Makassar agar payroll tidak bergeser tanggal.
+      const { start: startDate, end: endDate } = getMakassarMonthRange(
+        month,
+        year,
+      );
 
-    // 3. Ambil transaksi cucian pada periode tersebut
-    const { data: transactions, error: transError } = await supabase
-      .from("wash_transactions")
-      .select("vehicle_type, employee_id")
-      .gte("created_at", startDate)
-      .lte("created_at", endDate);
+      // 3. Ambil transaksi cucian pada periode tersebut
+      const { data: transactions, error: transError } = await supabase
+        .from("wash_transactions")
+        .select("vehicle_type, employee_id")
+        .gte("created_at", startDate)
+        .lte("created_at", endDate);
 
-    if (transError) throw transError;
+      if (transError) throw transError;
 
-    // 4. Hitung rekap gaji per karyawan
-    const recap = employees.map((emp) => {
-      const empTrans = transactions.filter((t) => t.employee_id === emp.id);
+      // 4. Hitung rekap gaji per karyawan
+      const recap = employees.map((emp) => {
+        const empTrans = transactions.filter((t) => t.employee_id === emp.id);
 
-      // Hitung jumlah unit (case insensitive)
-      const m = empTrans.filter(
-        (t) => t.vehicle_type.toLowerCase() === "mobil",
-      ).length;
-      const t = empTrans.filter(
-        (t) => t.vehicle_type.toLowerCase() === "motor",
-      ).length;
+        // Hitung jumlah unit (case insensitive)
+        const m = empTrans.filter(
+          (t) => t.vehicle_type.toLowerCase() === "mobil",
+        ).length;
+        const t = empTrans.filter(
+          (t) => t.vehicle_type.toLowerCase() === "motor",
+        ).length;
 
-      const gajiPokok = 1000000;
+        const gajiPokok = 1000000;
 
-      // Jalur 1 (S1) = (Mobil - 40) * 27rb + Motor * 10rb
-      const s1 = (m - 40) * 27000 + t * 10000;
+        // Jalur 1 (S1) = (Mobil - 40) * 27rb + Motor * 10rb
+        const s1 = (m - 40) * 27000 + t * 10000;
 
-      // Jalur 2 (S2) = (Mobil - 30) * 27rb + (Motor - 20) * 10rb
-      const s2 = (m - 30) * 27000 + (t - 20) * 10000;
+        // Jalur 2 (S2) = (Mobil - 30) * 27rb + (Motor - 20) * 10rb
+        const s2 = (m - 30) * 27000 + (t - 20) * 10000;
 
-      // Ambil bonus terbesar (bisa bernilai minus jika tidak capai target)
-      const bonusAkhir = Math.max(s1, s2);
-      const finalSalary = gajiPokok + bonusAkhir;
+        // Ambil bonus terbesar (bisa bernilai minus jika tidak capai target)
+        const bonusAkhir = Math.max(s1, s2);
+        const finalSalary = gajiPokok + bonusAkhir;
 
-      return {
-        id: emp.id,
-        name: emp.name,
-        m,
-        t,
-        s1,
-        s2,
-        bonus_akhir: bonusAkhir,
-        final_salary: finalSalary,
-      };
-    });
-    res.json(recap);
-  } catch (error) {
-    console.error("Payroll Error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+        return {
+          id: emp.id,
+          name: emp.name,
+          m,
+          t,
+          s1,
+          s2,
+          bonus_akhir: bonusAkhir,
+          final_salary: finalSalary,
+        };
+      });
+      res.json(recap);
+    } catch (error) {
+      console.error("Payroll Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  },
+);
 
 app.get("/api/rekap-harian", requireAuth, async (req, res) => {
   let { date } = req.query;
