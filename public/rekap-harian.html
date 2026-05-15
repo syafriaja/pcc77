@@ -3,289 +3,157 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rekap Harian - ShinePos</title>
+    <title>Rekap Harian - Pcc. S77</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
-        background-color: #f8fafc;
+        background: #f8fafc;
+      }
+      .soft-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
       }
     </style>
   </head>
-  <body class="p-4 md:p-8">
-    <div class="max-w-6xl mx-auto">
-      <!-- Navigasi -->
-      <div class="flex justify-between items-center mb-8">
-        <a
-          href="/index.html"
-          class="flex items-center gap-2 text-indigo-600 font-bold text-sm"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="3"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          KEMBALI KE DASHBOARD
-        </a>
-        <div id="dateFilterArea" class="hidden flex gap-2">
-          <input
-            type="date"
-            id="reportDate"
-            class="p-2 rounded-xl border border-slate-200 font-bold text-sm outline-indigo-500"
-          />
-          <button
-            onclick="loadDailyReport()"
-            class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm"
-          >
+  <body class="text-slate-900">
+    <div class="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
+      <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <a href="/index.html" class="text-sm font-black text-amber-600">
+            Kembali ke dashboard
+          </a>
+          <a href="/tentang.html" class="ml-4 text-sm font-black text-slate-500">
+            Tentang sistem
+          </a>
+          <h1 class="mt-2 text-3xl font-black tracking-tight">Rekap Operasional</h1>
+          <p id="currentDateDisplay" class="mt-1 text-sm font-bold text-slate-500">
+            Memuat tanggal...
+          </p>
+        </div>
+        <div id="dateFilterArea" class="hidden rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <input id="reportDate" type="date" class="rounded-xl px-3 py-2 text-sm font-bold outline-amber-500" />
+          <button onclick="loadDailyReport()" class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-black text-slate-950">
             Cari
           </button>
         </div>
-      </div>
+      </header>
 
-      <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Rekap Operasional
-        </h1>
-        <p id="currentDateDisplay" class="text-slate-500 font-medium text-sm">
-          Memuat tanggal...
-        </p>
-      </div>
-
-      <!-- Summary Cards + Keterangan Status -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div class="lg:col-span-2 grid grid-cols-2 gap-4">
-          <div
-            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Total Unit
-            </p>
-            <h3 id="statUnits" class="text-xl font-black text-slate-900">
-              0 / 0
-            </h3>
-          </div>
-          <div
-            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Mulai Operasional
-            </p>
-            <h3 id="statStart" class="text-xl font-black text-indigo-600">
-              --:--
-            </h3>
-          </div>
-          <div
-            class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Update Terakhir
-            </p>
-            <h3 id="statLast" class="text-xl font-black text-indigo-600">
-              --:--
-            </h3>
-          </div>
-          <div
-            id="revenueStatCard"
-            class="hidden bg-slate-900 p-6 rounded-[2rem] shadow-xl"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Pendapatan
-            </p>
-            <h3 id="statRevenue" class="text-lg font-black text-white">Rp 0</h3>
-          </div>
+      <section class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div class="soft-card rounded-3xl p-5">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400">Full Wash</p>
+          <h2 id="statFullwash" class="mt-3 text-3xl font-black">0</h2>
         </div>
+        <div class="soft-card rounded-3xl p-5">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400">Mobil / Motor</p>
+          <h2 id="statUnits" class="mt-3 text-3xl font-black">0 / 0</h2>
+        </div>
+        <div class="soft-card rounded-3xl p-5">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400">Operasional</p>
+          <h2 id="statHours" class="mt-3 text-xl font-black text-amber-600">--:--</h2>
+        </div>
+        <div id="revenueStatCard" class="hidden rounded-3xl bg-slate-900 p-5 text-white shadow-xl">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400">Pendapatan</p>
+          <h2 id="statRevenue" class="mt-3 text-2xl font-black">Rp 0</h2>
+        </div>
+        <div class="soft-card rounded-3xl p-5">
+          <p class="text-xs font-black uppercase tracking-widest text-slate-400">Non Target</p>
+          <h2 id="statNonTarget" class="mt-3 text-2xl font-black text-rose-600">Rp 0</h2>
+          <p id="statNonTargetCount" class="mt-1 text-xs font-bold text-slate-400">0 transaksi</p>
+        </div>
+      </section>
 
-        <!-- Keterangan Status -->
-        <div
-          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-        >
-          <h3 class="text-sm font-black text-slate-900 mb-5">
-            Keterangan Status
-          </h3>
-
-          <div class="space-y-4">
-            <div class="flex items-start gap-3">
-              <span class="w-3 h-3 rounded-full bg-slate-400 mt-1.5"></span>
-              <div>
-                <p class="text-sm font-black text-slate-800">Dalam Antrian</p>
-                <p class="text-xs font-semibold text-slate-500">
-                  Kendaraan menunggu giliran
-                </p>
+      <section class="space-y-8">
+        <div>
+          <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 class="text-lg font-black uppercase">Kendaraan Aktif</h2>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+                <button type="button" data-filter="all" onclick="setCategoryFilter('all')" class="filter-btn rounded-xl px-4 py-2 text-xs font-black text-slate-500">
+                  Semua
+                </button>
+                <button type="button" data-filter="fullwash" onclick="setCategoryFilter('fullwash')" class="filter-btn rounded-xl px-4 py-2 text-xs font-black text-slate-500">
+                  Full Wash
+                </button>
+                <button type="button" data-filter="non_target" onclick="setCategoryFilter('non_target')" class="filter-btn rounded-xl px-4 py-2 text-xs font-black text-slate-500">
+                  Non Target
+                </button>
               </div>
+              <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                Realtime aktif
+              </span>
             </div>
-
-            <div class="flex items-start gap-3">
-              <span class="w-3 h-3 rounded-full bg-yellow-400 mt-1.5"></span>
-              <div>
-                <p class="text-sm font-black text-slate-800">Sedang Dicuci</p>
-                <p class="text-xs font-semibold text-slate-500">
-                  Proses pencucian berlangsung
-                </p>
-              </div>
-            </div>
-
-            <div class="flex items-start gap-3">
-              <span class="w-3 h-3 rounded-full bg-green-500 mt-1.5"></span>
-              <div>
-                <p class="text-sm font-black text-slate-800">Selesai</p>
-                <p class="text-xs font-semibold text-slate-500">
-                  Pencucian selesai
-                </p>
-              </div>
+          </div>
+          <div class="soft-card overflow-hidden rounded-[2rem]">
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[920px] text-left">
+                <thead class="border-b border-slate-100 bg-slate-50">
+                  <tr>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Waktu</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kendaraan</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kategori</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Petugas</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Harga</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="activeTableBody" class="divide-y divide-slate-50"></tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Table Kendaraan Aktif -->
-      <div class="mb-8">
-        <h2 class="text-lg font-black text-slate-900 mb-4 uppercase">
-          Kendaraan Aktif
-        </h2>
-
-        <div
-          class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden"
-        >
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Waktu
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Kendaraan
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Petugas
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Harga
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Status
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
-                  >
-                    Metode
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="activeTableBody" class="divide-y divide-slate-50">
-                <!-- Kendaraan aktif masuk di sini -->
-              </tbody>
-            </table>
+        <div>
+          <h2 class="mb-4 text-lg font-black uppercase">Kendaraan Selesai</h2>
+          <div class="soft-card overflow-hidden rounded-[2rem]">
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[920px] text-left">
+                <thead class="border-b border-slate-100 bg-slate-50">
+                  <tr>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Waktu</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kendaraan</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kategori</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Petugas</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Harga</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="completedTableBody" class="divide-y divide-slate-50"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
-
-      <!-- Table Kendaraan Selesai -->
-      <div>
-        <h2 class="text-lg font-black text-slate-900 mb-4 uppercase">
-          Kendaraan Selesai
-        </h2>
-
-        <div
-          class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden"
-        >
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead class="bg-slate-50 border-b border-slate-100">
-                <tr>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Waktu
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Kendaraan
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Petugas
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Harga
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-                  >
-                    Status
-                  </th>
-                  <th
-                    class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
-                  >
-                    Metode
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="completedTableBody" class="divide-y divide-slate-50">
-                <!-- Kendaraan selesai masuk di sini -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
-    <!-- Script untuk interaktivitas dan koneksi backend -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="/js/realtime.js"></script>
-
     <script>
       const user = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
+      const formatIDR = (n) =>
+        new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(n || 0);
+      let categoryFilter = "all";
+      let dailyTransactions = [];
+
       if (!user || !token) {
         window.location.href = "/login.html";
         throw new Error("Login diperlukan");
       }
 
-      // Header ini dikirim ke API agar backend tahu user dan role dari token login.
       function authHeaders(extraHeaders = {}) {
-        return {
-          ...extraHeaders,
-          Authorization: `Bearer ${token}`,
-        };
+        return { ...extraHeaders, Authorization: `Bearer ${token}` };
       }
 
-      // Jika token sudah expired/invalid, user diarahkan login ulang.
       function handleAuthExpired(res) {
         if (res.status === 401) {
           localStorage.removeItem("user");
@@ -295,32 +163,130 @@
         }
       }
 
-      // Default tanggal rekap mengikuti Makassar agar cocok dengan rekap backend.
       const today = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Makassar",
       }).format(new Date());
       document.getElementById("reportDate").value = today;
 
-      // Tampilan khusus Owner
       if (user.role === "owner") {
         document.getElementById("dateFilterArea").classList.remove("hidden");
         document.getElementById("revenueStatCard").classList.remove("hidden");
       }
 
-      async function loadDailyReport() {
-        const date = document.getElementById("reportDate").value;
+      function categoryBadges(transaction) {
+        // Badge membantu membedakan full wash dan non-target tanpa membaca detail panjang.
+        if (transaction.service_category === "non_target") {
+          return `
+            <div class="flex flex-wrap gap-2">
+              <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-700">Non Target</span>
+              <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600">Dibayar Langsung</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">Tidak Masuk Payroll</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="flex flex-wrap gap-2">
+            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">Full Wash</span>
+            <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">Masuk Payroll</span>
+          </div>
+        `;
+      }
+
+      function statusControl(transaction) {
+        // Tombol status hanya muncul untuk kendaraan yang belum selesai.
+        // Saat diklik, backend mengubah status lalu realtime akan refresh tabel.
+        if (transaction.status === "selesai") {
+          return '<span class="rounded-xl bg-emerald-100 px-3 py-2 text-xs font-black uppercase text-emerald-700">Selesai</span>';
+        }
+
+        const label = transaction.status === "sedang_dicuci" ? "Sedang Dicuci" : "Dalam Antrian";
+        const color = transaction.status === "sedang_dicuci"
+          ? "bg-amber-100 text-amber-700"
+          : "bg-slate-100 text-slate-700";
+
+        return `
+          <button
+            type="button"
+            onclick="this.disabled = true; this.innerText = 'Memproses...'; updateVehicleStatus(${transaction.id}, '${transaction.status}')"
+            class="rounded-xl px-3 py-2 text-xs font-black uppercase transition hover:scale-[1.02] disabled:opacity-50 ${color}"
+          >
+            ${label}
+          </button>
+        `;
+      }
+
+      function rowTemplate(transaction) {
+        const isNonTarget = transaction.service_category === "non_target";
+        const rowClass = isNonTarget ? "bg-rose-50/70 hover:bg-rose-50" : "hover:bg-slate-50";
+        const vehicleLabel = `${transaction.vehicle_type || "-"} ${transaction.vehicle_size || ""}`.trim();
+
+        return `
+          <tr class="${rowClass} transition">
+            <td class="p-5 font-black text-slate-900">${transaction.time}</td>
+            <td class="p-5">
+              <p class="text-sm font-black text-slate-900">${transaction.vehicle_brand || transaction.vehicle_type}</p>
+              <p class="mt-1 text-xs font-black uppercase text-slate-400">${vehicleLabel}</p>
+            </td>
+            <td class="p-5">${categoryBadges(transaction)}</td>
+            <td class="p-5 text-sm font-bold text-slate-600">${transaction.employee_name}</td>
+            <td class="p-5 text-sm font-black text-slate-900">${formatIDR(transaction.price)}</td>
+            <td class="p-5">${statusControl(transaction)}</td>
+          </tr>
+        `;
+      }
+
+      function emptyRow(message) {
+        return `<tr><td colspan="6" class="p-16 text-center text-sm font-bold text-slate-400">${message}</td></tr>`;
+      }
+
+      function updateFilterButtons() {
+        // Menandai tombol filter yang sedang aktif agar mudah dilihat.
+        document.querySelectorAll(".filter-btn").forEach((button) => {
+          const active = button.dataset.filter === categoryFilter;
+          button.classList.toggle("bg-slate-900", active);
+          button.classList.toggle("text-white", active);
+          button.classList.toggle("text-slate-500", !active);
+        });
+      }
+
+      function getFilteredTransactions() {
+        // Filter hanya mengatur tampilan tabel, bukan mengubah data di Supabase.
+        if (categoryFilter === "all") return dailyTransactions;
+        return dailyTransactions.filter(
+          (transaction) => transaction.service_category === categoryFilter,
+        );
+      }
+
+      function renderTransactionTables() {
+        // Data yang sama dipisah menjadi kendaraan aktif dan kendaraan selesai.
         const activeTbody = document.getElementById("activeTableBody");
         const completedTbody = document.getElementById("completedTableBody");
-        const formatIDR = (n) =>
-          new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            maximumFractionDigits: 0,
-          }).format(n || 0);
+        const transactions = getFilteredTransactions();
+        const activeTransactions = transactions.filter((item) => item.status !== "selesai");
+        const completedTransactions = transactions.filter((item) => item.status === "selesai");
 
-        document.getElementById("currentDateDisplay").innerText = new Date(
-          date,
-        ).toLocaleDateString("id-ID", {
+        updateFilterButtons();
+
+        activeTbody.innerHTML = activeTransactions.length
+          ? activeTransactions.map(rowTemplate).join("")
+          : emptyRow("Belum ada kendaraan aktif untuk filter ini.");
+        completedTbody.innerHTML = completedTransactions.length
+          ? completedTransactions.map(rowTemplate).join("")
+          : emptyRow("Belum ada kendaraan selesai untuk filter ini.");
+      }
+
+      function setCategoryFilter(filter) {
+        categoryFilter = filter;
+        renderTransactionTables();
+      }
+
+      async function loadDailyReport() {
+        // Mengambil rekap tanggal terpilih, lalu menghitung total non-target
+        // yang dibayar langsung pada hari tersebut.
+        const date = document.getElementById("reportDate").value;
+
+        document.getElementById("currentDateDisplay").innerText = new Date(date).toLocaleDateString("id-ID", {
           weekday: "long",
           year: "numeric",
           month: "long",
@@ -328,201 +294,63 @@
         });
 
         try {
-          const res = await fetch(
-            `/api/rekap-harian?date=${date}`,
-            {
-              headers: authHeaders(),
-            },
-          );
+          const res = await fetch(`/api/rekap-harian?date=${date}`, {
+            headers: authHeaders(),
+          });
           handleAuthExpired(res);
           const data = await res.json();
-
-          if (data.transactions.length === 0) {
-            activeTbody.innerHTML = `
-                    <tr>
-                      <td colspan="6" class="p-20 text-center text-slate-400 italic">
-                        Belum ada kendaraan aktif.
-                      </td>
-                    </tr>
-                  `;
-
-            completedTbody.innerHTML = `
-                    <tr>
-                      <td colspan="6" class="p-20 text-center text-slate-400 italic">
-                        Belum ada kendaraan selesai.
-                      </td>
-                    </tr>
-                  `;
-
-            resetStats();
-            return;
-          }
-
-          // Update Ringkasan
-          document.getElementById("statUnits").innerText =
-            `${data.summary.mobil} M / ${data.summary.motor} T`;
-          document.getElementById("statStart").innerText =
-            data.summary.startTime || "--:--";
-          document.getElementById("statLast").innerText =
-            data.summary.lastTime || "--:--";
-          if (user.role === "owner") {
-            document.getElementById("statRevenue").innerText = formatIDR(
-              data.summary.revenue,
-            );
-          }
-
-          // Update Tabel
-          const activeTransactions = data.transactions.filter(
-            (t) => t.status !== "selesai",
+          dailyTransactions = data.transactions || [];
+          const summary = data.summary || {};
+          const nonTargetTransactions = dailyTransactions.filter(
+            (transaction) => transaction.service_category === "non_target",
+          );
+          const nonTargetTotal = nonTargetTransactions.reduce(
+            (sum, transaction) => sum + Number(transaction.price || 0),
+            0,
           );
 
-          const completedTransactions = data.transactions.filter(
-            (t) => t.status === "selesai",
-          );
+          document.getElementById("statFullwash").innerText = summary.fullwash || 0;
+          document.getElementById("statUnits").innerText = `${summary.allMobil || 0} / ${summary.allMotor || 0}`;
+          document.getElementById("statHours").innerText = `${summary.startTime || "--:--"} - ${summary.lastTime || "--:--"}`;
+          document.getElementById("statNonTarget").innerText = formatIDR(nonTargetTotal);
+          document.getElementById("statNonTargetCount").innerText = `${nonTargetTransactions.length} transaksi`;
+          if (user.role === "owner") document.getElementById("statRevenue").innerText = formatIDR(summary.revenue);
 
-          activeTbody.innerHTML = activeTransactions
-            .map(
-              (t) => `
-                                <tr class="hover:bg-slate-50 transition-all">
-                                    <td class="p-6 font-bold text-slate-900">${t.time}</td>
-                                    <td class="p-6">
-                                      <div class="flex items-center gap-2">
-                                      <span class="text-lg">
-                                        ${t.vehicle_type === "mobil" ? "🚗" : "🏍️"}
-                                      </span>
-                                      <div>
-                                      <p class="font-black text-slate-900 text-sm">
-                                        ${t.vehicle_brand || t.vehicle_type}
-                                      </p>
-                                      <p class="text-[10px] font-black text-slate-400 uppercase">
-                                        ${t.vehicle_type}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </td>
-                                    <td class="p-6 font-semibold text-slate-600 text-sm">${t.employee_name}</td>
-                                    <td class="p-6 font-bold text-slate-900 text-sm">${formatIDR(t.price)}</td>
-<td class="p-6">
-  <button
-    onclick="this.disabled = true; this.innerText = 'Memproses...'; updateVehicleStatus(${t.id}, '${t.status}')"
-    class="
-      px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all hover:scale-105
-      disabled:opacity-50 disabled:cursor-not-allowed
-      ${
-        t.status === "sedang_dicuci"
-          ? "bg-yellow-100 text-yellow-700"
-          : "bg-slate-200 text-slate-600"
-      }
-    "
-  >
-    ${t.status === "sedang_dicuci" ? "🧼 Sedang Dicuci" : "⏳ Dalam Antrian"}
-  </button>
-</td>                                    
-                                    <td class="p-6 text-right font-black text-slate-400 text-[10px] uppercase">Cash</td>
-                                </tr>
-                            `,
-            )
-            .join("");
-          completedTbody.innerHTML = completedTransactions
-            .map(
-              (t) => `
-          <tr class="hover:bg-slate-50 transition-all opacity-80">
-              <td class="p-6 font-bold text-slate-900">${t.time}</td>
-              <td class="p-6">
-                <div class="flex items-center gap-2">
-                  <span class="text-lg">
-                    ${t.vehicle_type === "mobil" ? "🚗" : "🏍️"}
-                  </span>
-
-                  <div>
-                    <p class="font-black text-slate-900 text-sm">
-                      ${t.vehicle_brand || t.vehicle_type}
-                    </p>
-
-                    <div class="mt-1">
-                      <span class="px-2 py-1 rounded-full text-[10px] font-black uppercase bg-green-100 text-green-600">
-                        ✅ Selesai
-                      </span>
-                    </div>
-
-                    <p class="text-[10px] font-black text-slate-400 uppercase">
-                      ${t.vehicle_type}
-                    </p>
-                  </div>
-                </div>
-              </td>
-
-              <td class="p-6 font-semibold text-slate-600 text-sm">
-                ${t.employee_name}
-              </td>
-
-              <td class="p-6 font-bold text-slate-900 text-sm">
-                ${formatIDR(t.price)}
-              </td>
-
-              <td class="p-6">
-              <span class="px-3 py-2 rounded-xl text-[10px] font-black uppercase bg-green-100 text-green-700">
-              ✅ Selesai
-              </span>
-              </td>
-
-              <td class="p-6 text-right font-black text-slate-400 text-[10px] uppercase">
-                Cash
-              </td>
-          </tr>
-      `,
-            )
-            .join("");
-        } catch (e) {
-          console.error("Gagal memuat rekap:", e);
+          renderTransactionTables();
+        } catch (error) {
+          console.error("Gagal memuat rekap", error);
         }
       }
 
-      function resetStats() {
-        document.getElementById("statRevenue").innerText = "Rp 0";
-        document.getElementById("statUnits").innerText = "0 / 0";
-        document.getElementById("statStart").innerText = "--:--";
-        document.getElementById("statLast").innerText = "--:--";
-      }
       async function updateVehicleStatus(id, currentStatus) {
-        let nextStatus = currentStatus;
+        // Urutan status dibuat sederhana: antrian -> dicuci -> selesai.
+        const nextStatus =
+          currentStatus === "dalam_antrian"
+            ? "sedang_dicuci"
+            : currentStatus === "sedang_dicuci"
+              ? "selesai"
+              : "";
 
-        if (currentStatus === "dalam_antrian") {
-          nextStatus = "sedang_dicuci";
-        } else if (currentStatus === "sedang_dicuci") {
-          nextStatus = "selesai";
-        } else {
-          return;
-        }
+        if (!nextStatus) return;
 
         try {
           const res = await fetch(`/api/transactions/${id}/status`, {
             method: "PATCH",
-            headers: authHeaders({
-              "Content-Type": "application/json",
-            }),
-            body: JSON.stringify({
-              status: nextStatus,
-            }),
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ status: nextStatus }),
           });
           handleAuthExpired(res);
-
           const data = await res.json();
-
-          if (!data.success) {
-            alert("Gagal update status");
-          }
-        } catch (err) {
-          console.error(err);
-          alert("Terjadi kesalahan");
+          if (!data.success) alert(data.message || "Gagal update status");
+        } catch (error) {
+          alert("Terjadi kesalahan saat update status.");
         }
       }
 
       loadDailyReport();
-
-      window.addEventListener("refresh-data", () => {
-        loadDailyReport();
-      });
+      // Supabase realtime memanggil ulang rekap saat ada transaksi/status berubah.
+      window.addEventListener("refresh-data", loadDailyReport);
+      window.setCategoryFilter = setCategoryFilter;
     </script>
   </body>
 </html>

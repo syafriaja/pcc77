@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tentang Sistem - Pcc. S77</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background: #f8fafc;
+      }
+      .soft-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+      }
+      .brand-mark {
+        display: inline-block;
+        font-family: "Arial Black", "Plus Jakarta Sans", sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        transform: skewX(-8deg);
+        background: linear-gradient(110deg, #1f2937 0%, #64748b 34%, #d4a017 68%, #8a5a12 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: #0f172a;
+        -webkit-text-fill-color: transparent;
+        -webkit-text-stroke: 0.35px rgba(15, 23, 42, 0.45);
+        filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.24));
+      }
+    </style>
+  </head>
+  <body class="text-slate-900">
+    <div class="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-8">
+      <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p class="text-sm uppercase">
+            <span class="brand-mark">PCC. S77</span>
+          </p>
+          <h1 id="pageTitle" class="mt-1 text-3xl font-black tracking-tight">
+            Tentang Sistem
+          </h1>
+          <p id="pageSubtitle" class="mt-2 max-w-3xl text-sm font-bold leading-6 text-slate-500">
+            Panduan singkat penggunaan aplikasi.
+          </p>
+        </div>
+        <a
+          href="/index.html"
+          class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+        >
+          Kembali
+        </a>
+      </header>
+
+      <main id="staffContent" class="space-y-6">
+        <section class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-xl font-black">Panduan Kasir</h2>
+          <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+            Kasir fokus pada input kendaraan, memilih kategori layanan, dan
+            mengubah status kendaraan sesuai proses kerja.
+          </p>
+        </section>
+
+        <section class="grid gap-5 md:grid-cols-2">
+          <div class="soft-card rounded-[2rem] p-6">
+            <h3 class="text-lg font-black">Input Kendaraan</h3>
+            <ul class="mt-4 space-y-2 text-sm font-bold leading-7 text-slate-600">
+              <li>Pilih jenis kendaraan: mobil atau motor.</li>
+              <li>Pilih ukuran kendaraan.</li>
+              <li>Pilih kategori layanan.</li>
+              <li>Isi merek kendaraan, petugas, dan harga wash.</li>
+            </ul>
+          </div>
+
+          <div class="soft-card rounded-[2rem] p-6">
+            <h3 class="text-lg font-black">Kategori Layanan</h3>
+            <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+              Pilih <strong>Full Wash</strong> untuk cuci reguler. Pilih
+              <strong> Non Target</strong> untuk body/samping, interior/dalam,
+              custom, atau truk.
+            </p>
+          </div>
+        </section>
+
+        <section class="grid gap-5 md:grid-cols-2">
+          <div class="soft-card rounded-[2rem] p-6">
+            <h3 class="text-lg font-black">Status Kendaraan</h3>
+            <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+              Status berjalan dari Dalam Antrian, Sedang Dicuci, lalu Selesai.
+              Klik tombol status di Rekap Harian untuk memperbarui status.
+            </p>
+          </div>
+
+          <div class="soft-card rounded-[2rem] bg-rose-50 p-6">
+            <h3 class="text-lg font-black">Catatan Non Target</h3>
+            <p class="mt-3 text-sm font-bold leading-7 text-rose-700">
+              Non Target dibayar langsung dan tidak masuk payroll, target, atau
+              slip gaji. Pastikan kategorinya benar saat input.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <main id="ownerContent" class="hidden space-y-6">
+        <section class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-xl font-black">Konsep Utama</h2>
+          <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+            Pcc. S77 memisahkan transaksi menjadi <strong>Full Wash</strong> dan
+            <strong> Non Target</strong>. Full Wash masuk payroll, target, dan
+            slip gaji. Non Target dibayar langsung dan tidak masuk payroll.
+          </p>
+        </section>
+
+        <section class="grid gap-5 md:grid-cols-2">
+          <div class="soft-card rounded-[2rem] p-6">
+            <p class="text-xs font-black uppercase tracking-widest text-amber-600">
+              Full Wash
+            </p>
+            <h2 class="mt-2 text-xl font-black">Masuk payroll dan target</h2>
+            <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+              Setiap transaksi full wash menyimpan nilai upah payroll dan bonus
+              harian sesuai aturan yang aktif saat transaksi dibuat.
+            </p>
+          </div>
+
+          <div class="soft-card rounded-[2rem] bg-rose-50 p-6">
+            <p class="text-xs font-black uppercase tracking-widest text-rose-600">
+              Non Target
+            </p>
+            <h2 class="mt-2 text-xl font-black">Dibayar langsung</h2>
+            <p class="mt-3 text-sm font-bold leading-7 text-rose-700">
+              Body/samping, interior/dalam, custom, atau truk tetap tercatat di
+              rekap, tetapi tidak masuk target, payroll, atau slip gaji.
+            </p>
+          </div>
+        </section>
+
+        <section class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-xl font-black">Aturan Upah Karyawan</h2>
+          <div class="mt-5 grid gap-4 md:grid-cols-2">
+            <div class="rounded-3xl bg-slate-50 p-5">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Upah Payroll Full Wash
+              </p>
+              <ul class="mt-4 space-y-2 text-sm font-bold text-slate-700">
+                <li>Mobil kecil: Rp 23.000</li>
+                <li>Mobil sedang: Rp 27.000</li>
+                <li>Mobil besar: Rp 31.000</li>
+                <li>Motor kecil: Rp 7.000</li>
+                <li>Motor besar: Rp 11.000</li>
+              </ul>
+            </div>
+            <div class="rounded-3xl bg-amber-50 p-5">
+              <p class="text-xs font-black uppercase tracking-widest text-amber-700">
+                Bonus Harian
+              </p>
+              <ul class="mt-4 space-y-2 text-sm font-bold text-slate-700">
+                <li>Mobil kecil: Rp 7.000</li>
+                <li>Mobil sedang: Rp 8.000</li>
+                <li>Mobil besar: Rp 9.000</li>
+                <li>Motor kecil: Rp 3.000</li>
+                <li>Motor besar: Rp 4.000</li>
+              </ul>
+            </div>
+          </div>
+          <p class="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm font-bold leading-7 text-emerald-800">
+            Owner bisa mengubah nominal dari halaman Payroll. Perubahan langsung
+            berlaku untuk transaksi baru setelah disimpan. Transaksi lama tidak
+            ikut berubah karena nilainya sudah tersimpan saat transaksi dibuat.
+          </p>
+        </section>
+
+        <section class="grid gap-5 md:grid-cols-2">
+          <div class="soft-card rounded-[2rem] p-6">
+            <h2 class="text-xl font-black">Target</h2>
+            <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+              Target S2 adalah 45 mobil dan 30 motor. Target hanya indikator
+              performa. Tidak ada minus, penalti, atau pengurang gaji.
+            </p>
+          </div>
+
+          <div class="soft-card rounded-[2rem] p-6">
+            <h2 class="text-xl font-black">Status Realtime</h2>
+            <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+              Status kendaraan diperbarui lewat Supabase realtime tanpa reload
+              manual di dashboard dan rekap.
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const user = JSON.parse(localStorage.getItem("user"));
+      const isOwner = user?.role === "owner";
+
+      // Halaman Tentang dibuat beda untuk owner dan staff.
+      // Staff hanya melihat panduan operasi, owner melihat aturan sistem lengkap.
+      if (isOwner) {
+        document.getElementById("staffContent").classList.add("hidden");
+        document.getElementById("ownerContent").classList.remove("hidden");
+        document.getElementById("pageTitle").innerText = "Tentang Sistem Owner";
+        document.getElementById("pageSubtitle").innerText =
+          "Penjelasan lengkap tentang transaksi, payroll, bonus harian, target, dan realtime.";
+      }
+    </script>
+  </body>
+</html>

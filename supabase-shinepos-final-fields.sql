@@ -1,0 +1,97 @@
+alter table public.wash_transactions
+  add column if not exists vehicle_size text,
+  add column if not exists service_category text default 'fullwash',
+  add column if not exists employee_name text,
+  add column if not exists bonus_amount numeric default 0,
+  add column if not exists payroll_value numeric default 0,
+  add column if not exists input_by text;
+
+create table if not exists public.payroll_settings (
+  key text primary key,
+  label text not null,
+  vehicle_type text not null,
+  vehicle_size text not null,
+  payroll_value numeric not null default 0,
+  daily_bonus_value numeric not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+insert into public.payroll_settings
+  (key, label, vehicle_type, vehicle_size, payroll_value, daily_bonus_value)
+values
+  ('mobil_kecil', 'Mobil kecil', 'mobil', 'kecil', 23000, 7000),
+  ('mobil_sedang', 'Mobil sedang', 'mobil', 'sedang', 27000, 8000),
+  ('mobil_besar', 'Mobil besar', 'mobil', 'besar', 31000, 9000),
+  ('motor_kecil', 'Motor kecil', 'motor', 'kecil', 7000, 3000),
+  ('motor_besar', 'Motor besar', 'motor', 'besar', 11000, 4000)
+on conflict (key) do update
+set
+  label = excluded.label,
+  vehicle_type = excluded.vehicle_type,
+  vehicle_size = excluded.vehicle_size,
+  updated_at = now();
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'wash_transactions_vehicle_size_check'
+  ) then
+    alter table public.wash_transactions
+      add constraint wash_transactions_vehicle_size_check
+      check (vehicle_size is null or vehicle_size in ('kecil', 'sedang', 'besar')) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'wash_transactions_service_category_check'
+  ) then
+    alter table public.wash_transactions
+      add constraint wash_transactions_service_category_check
+      check (service_category in ('fullwash', 'non_target')) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'wash_transactions_input_by_check'
+  ) then
+    alter table public.wash_transactions
+      add constraint wash_transactions_input_by_check
+      check (input_by is null or input_by in ('owner', 'staff')) not valid;
+  end if;
+end $$;
+
+update public.wash_transactions
+set
+  service_category = coalesce(service_category, 'fullwash'),
+  vehicle_size = coalesce(
+    vehicle_size,
+    case
+      when vehicle_type = 'motor' then 'kecil'
+      else 'sedang'
+    end
+  ),
+  bonus_amount = case
+    when bonus_amount is null or bonus_amount = 0 then
+      case
+        when service_category = 'non_target' then 0
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'kecil' then 7000
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'sedang' then 8000
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'besar' then 9000
+        when vehicle_type = 'motor' and coalesce(vehicle_size, 'kecil') = 'kecil' then 3000
+        when vehicle_type = 'motor' and coalesce(vehicle_size, 'kecil') = 'besar' then 4000
+        else 0
+      end
+    else bonus_amount
+  end,
+  payroll_value = case
+    when service_category = 'non_target' then 0
+    when payroll_value is null or payroll_value = 0 then
+      case
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'kecil' then 23000
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'sedang' then 27000
+        when vehicle_type = 'mobil' and coalesce(vehicle_size, 'sedang') = 'besar' then 31000
+        when vehicle_type = 'motor' and coalesce(vehicle_size, 'kecil') = 'kecil' then 7000
+        when vehicle_type = 'motor' and coalesce(vehicle_size, 'kecil') = 'besar' then 11000
+        else 0
+      end
+    else payroll_value
+  end,
+  input_by = coalesce(input_by, 'staff');

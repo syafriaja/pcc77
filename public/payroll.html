@@ -3,19 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manajemen Gaji - ShinePos</title>
+    <title>Payroll - Pcc. S77</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <style>
       body {
-        font-family: "Inter", sans-serif;
-        background-color: #f8fafc;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        background: #f8fafc;
       }
-
-      /* OPTIMASI PRINT A4 */
+      .soft-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+      }
       @media print {
         @page {
           size: A4;
@@ -36,9 +39,7 @@
           left: 0;
           top: 0;
           width: 100%;
-          height: 100%;
         }
-        /* Memastikan warna background (badge) ikut tercetak */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
@@ -46,51 +47,23 @@
       }
     </style>
   </head>
-  <body class="text-slate-900 antialiased">
-    <div class="max-w-6xl mx-auto no-print">
-      <!-- Breadcrumb & Navigasi -->
-      <div class="mb-6">
-        <a
-          href="/index.html"
-          class="inline-flex items-center gap-2 text-indigo-600 font-bold text-sm hover:text-indigo-800 transition-all"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="3"
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
-          KEMBALI KE DASHBOARD
-        </a>
-      </div>
-
-      <!-- Header -->
-      <div
-        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
-      >
+  <body class="text-slate-900">
+    <div class="no-print mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
+      <header class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Manajemen Gaji
-          </h1>
-          <p class="text-slate-500 font-medium text-sm">
-            Rekap bulanan performa S1 & S2.
+          <a href="/index.html" class="text-sm font-black text-amber-600">
+            Kembali ke dashboard
+          </a>
+          <a href="/tentang.html" class="ml-4 text-sm font-black text-slate-500">
+            Tentang sistem
+          </a>
+          <h1 class="mt-2 text-3xl font-black tracking-tight">Manajemen Payroll</h1>
+          <p class="mt-1 text-sm font-bold text-slate-500">
+            Full wash dihitung payroll. Target hanya indikator performa.
           </p>
         </div>
-        <div
-          class="flex gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200"
-        >
-          <select
-            id="monthSelect"
-            class="bg-transparent font-bold px-3 py-2 outline-none text-sm cursor-pointer"
-          >
+        <div class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+          <select id="monthSelect" class="rounded-xl px-3 py-2 text-sm font-bold outline-amber-500">
             <option value="1">Januari</option>
             <option value="2">Februari</option>
             <option value="3">Maret</option>
@@ -104,96 +77,118 @@
             <option value="11">November</option>
             <option value="12">Desember</option>
           </select>
-          <select
-            id="yearSelect"
-            class="bg-transparent font-bold px-3 py-2 border-l border-slate-200 outline-none text-sm cursor-pointer"
-          ></select>
-          <button
-            onclick="loadPayrollData()"
-            class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-indigo-700 transition-all text-sm"
-          >
+          <select id="yearSelect" class="rounded-xl border-l border-slate-100 px-3 py-2 text-sm font-bold outline-amber-500"></select>
+          <button onclick="loadPayrollData()" class="rounded-xl bg-amber-500 px-5 py-2 text-sm font-black text-slate-950">
             Tampilkan
           </button>
         </div>
-      </div>
+      </header>
 
-      <!-- Tabel Monitoring -->
-      <div
-        class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-x-auto"
-      >
-        <table class="w-full min-w-[760px] text-left">
-          <thead class="bg-slate-50 border-b border-slate-100">
-            <tr>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-              >
-                Karyawan
-              </th>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center"
-              >
-                Unit (M / T)
-              </th>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-              >
-                Hasil S1
-              </th>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-              >
-                Hasil S2
-              </th>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest"
-              >
-                Total Gaji
-              </th>
-              <th
-                class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right"
-              >
-                Aksi
-              </th>
-            </tr>
-          </thead>
-          <tbody id="payrollTableBody" class="divide-y divide-slate-50">
-            <tr>
-              <td
-                colspan="6"
-                class="p-20 text-center text-slate-400 italic text-sm"
-              >
-                Silakan pilih periode dan klik Tampilkan.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <section class="soft-card mb-6 rounded-[2rem] p-5 md:p-6">
+        <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-widest text-amber-600">
+              Keterangan Payroll Karyawan
+            </p>
+            <h2 class="mt-1 text-xl font-black tracking-tight">
+              Aturan upah full wash dan bonus harian
+            </h2>
+            <p class="mt-2 max-w-3xl text-sm font-bold leading-6 text-slate-500">
+              Nilai di bawah dipakai untuk transaksi full wash baru. Perubahan
+              tidak mengubah transaksi lama karena nilai payroll dan bonus sudah
+              disimpan saat transaksi dibuat.
+            </p>
+          </div>
+          <button
+            type="button"
+            id="saveSettingsBtn"
+            onclick="enterSettingsEditMode()"
+            class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800 disabled:opacity-60"
+          >
+            Edit Aturan
+          </button>
+          <button
+            type="button"
+            id="cancelSettingsBtn"
+            onclick="cancelSettingsEditMode()"
+            class="hidden rounded-2xl bg-slate-100 px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200"
+          >
+            Batal
+          </button>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-2">
+          <div class="rounded-3xl bg-slate-50 p-4">
+            <p class="mb-3 text-xs font-black uppercase tracking-widest text-slate-400">
+              Upah Payroll Full Wash
+            </p>
+            <div id="payrollSettingsList" class="space-y-3"></div>
+          </div>
+          <div class="rounded-3xl bg-amber-50 p-4">
+            <p class="mb-3 text-xs font-black uppercase tracking-widest text-amber-700">
+              Upah Bonus Harian
+            </p>
+            <div id="bonusSettingsList" class="space-y-3"></div>
+          </div>
+        </div>
+
+        <div class="mt-5 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-bold leading-6 text-emerald-800">
+          Full wash masuk payroll, target, dan slip gaji. Bonus harian dibayar
+          langsung harian dengan nominal tetap. Non-target tetap tidak masuk
+          payroll, target, atau slip gaji.
+        </div>
+      </section>
+
+      <section class="soft-card overflow-hidden rounded-[2rem]">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[920px] text-left">
+            <thead class="border-b border-slate-100 bg-slate-50">
+              <tr>
+                <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Karyawan</th>
+                <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Full Wash</th>
+                <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Progress S2</th>
+                <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Bonus Harian</th>
+                <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Payroll</th>
+                <th class="p-5 text-right text-xs font-black uppercase tracking-widest text-slate-400">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="payrollTableBody" class="divide-y divide-slate-50">
+              <tr>
+                <td colspan="6" class="p-16 text-center text-sm font-bold text-slate-400">
+                  Pilih periode dan klik Tampilkan.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
 
-    <!-- AREA SLIP GAJI (HIDDEN DI LAYAR) -->
     <div id="printArea" class="hidden"></div>
 
     <script>
-      // Payroll hanya untuk owner; token dikirim agar backend bisa menolak akses staf.
       const user = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
+      const formatIDR = (n) =>
+        new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(n || 0);
 
       if (!user || !token) {
         window.location.href = "/login.html";
         throw new Error("Login diperlukan");
-      } else if (user.role !== "owner") {
+      }
+      if (user.role !== "owner") {
         window.location.href = "/index.html";
         throw new Error("Akses payroll hanya untuk owner");
       }
 
       function authHeaders(extraHeaders = {}) {
-        return {
-          ...extraHeaders,
-          Authorization: `Bearer ${token}`,
-        };
+        return { ...extraHeaders, Authorization: `Bearer ${token}` };
       }
 
-      // Jika token expired, owner diminta login ulang sebelum membuka payroll.
       function handleAuthExpired(res) {
         if (res.status === 401) {
           localStorage.removeItem("user");
@@ -203,7 +198,6 @@
         }
       }
 
-      // Setup Tahun
       const ySel = document.getElementById("yearSelect");
       const now = new Date();
       for (let i = now.getFullYear() - 1; i <= now.getFullYear() + 1; i++) {
@@ -216,181 +210,321 @@
       document.getElementById("monthSelect").value = now.getMonth() + 1;
 
       let payrollData = [];
-      const formatIDR = (n) =>
-        new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-          maximumFractionDigits: 0,
-        }).format(n || 0);
+      let payrollSettings = [];
+      let isEditingSettings = false;
 
-      async function loadPayrollData() {
-        const m = document.getElementById("monthSelect").value;
-        const y = document.getElementById("yearSelect").value;
-        const tbody = document.getElementById("payrollTableBody");
+      function settingInput(setting, field) {
+        // Dalam mode lihat, aturan tampil sebagai teks agar tidak mudah salah edit.
+        // Input angka baru muncul setelah owner menekan tombol Edit Aturan.
+        const label = field === "payroll_value" ? "Payroll" : "Bonus";
+        const value = setting[field] || 0;
 
-        tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center font-bold text-indigo-600 animate-pulse">Menghitung data...</td></tr>`;
+        if (!isEditingSettings) {
+          return `
+            <div class="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-sm">
+              <span>
+                <span class="block text-sm font-black text-slate-900">${setting.label}</span>
+                <span class="block text-xs font-bold text-slate-400">${label} tetap per full wash</span>
+              </span>
+              <span class="text-sm font-black text-slate-900">${formatIDR(value)}</span>
+            </div>
+          `;
+        }
+
+        return `
+          <label class="flex items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-sm">
+            <span>
+              <span class="block text-sm font-black text-slate-900">${setting.label}</span>
+              <span class="block text-xs font-bold text-slate-400">${label} tetap per full wash</span>
+            </span>
+            <input
+              type="number"
+              min="0"
+              step="500"
+              data-setting-key="${setting.key}"
+              data-setting-field="${field}"
+              value="${value}"
+              class="w-32 rounded-xl bg-slate-50 px-3 py-2 text-right text-sm font-black outline-amber-500"
+            />
+          </label>
+        `;
+      }
+
+      function renderPayrollSettings() {
+        // Satu sumber data ditampilkan menjadi dua daftar:
+        // daftar upah payroll dan daftar bonus harian.
+        document.getElementById("payrollSettingsList").innerHTML = payrollSettings
+          .map((setting) => settingInput(setting, "payroll_value"))
+          .join("");
+        document.getElementById("bonusSettingsList").innerHTML = payrollSettings
+          .map((setting) => settingInput(setting, "daily_bonus_value"))
+          .join("");
+
+        document.getElementById("saveSettingsBtn").innerText = isEditingSettings
+          ? "Simpan Perubahan"
+          : "Edit Aturan";
+        document.getElementById("saveSettingsBtn").onclick = isEditingSettings
+          ? savePayrollSettings
+          : enterSettingsEditMode;
+        document
+          .getElementById("cancelSettingsBtn")
+          .classList.toggle("hidden", !isEditingSettings);
+      }
+
+      async function loadPayrollSettings() {
+        // Mengambil aturan terbaru dari Supabase.
+        // Jika belum ada, backend akan memberi nilai bawaan.
+        try {
+          const res = await fetch("/api/admin/payroll-settings", {
+            headers: authHeaders(),
+          });
+          handleAuthExpired(res);
+          const data = await res.json();
+
+          if (!data.success) {
+            alert(data.message || "Gagal memuat aturan payroll");
+            return;
+          }
+
+          payrollSettings = data.settings || [];
+          renderPayrollSettings();
+        } catch (error) {
+          alert("Gagal memuat aturan payroll.");
+        }
+      }
+
+      function enterSettingsEditMode() {
+        // Owner harus masuk mode edit dulu sebelum angka bisa diubah.
+        isEditingSettings = true;
+        renderPayrollSettings();
+      }
+
+      async function cancelSettingsEditMode() {
+        // Batal mengambil ulang data lama, jadi salah ketik tidak tersimpan.
+        isEditingSettings = false;
+        await loadPayrollSettings();
+      }
+
+      async function savePayrollSettings() {
+        // Konfirmasi ini mencegah owner tidak sengaja menyimpan perubahan.
+        const confirmed = window.confirm(
+          "Simpan perubahan aturan payroll? Perubahan hanya berlaku untuk transaksi baru.",
+        );
+
+        if (!confirmed) return;
+
+        const button = document.getElementById("saveSettingsBtn");
+        const nextSettings = payrollSettings.map((setting) => ({ ...setting }));
+
+        document.querySelectorAll("[data-setting-key]").forEach((input) => {
+          const setting = nextSettings.find(
+            (item) => item.key === input.dataset.settingKey,
+          );
+          if (setting) setting[input.dataset.settingField] = Number(input.value || 0);
+        });
+
+        button.disabled = true;
+        button.innerText = "Menyimpan...";
 
         try {
-          const res = await fetch(
-            `/api/admin/payroll-recap?month=${m}&year=${y}`,
-            {
-              headers: authHeaders(),
-            },
-          );
+          const res = await fetch("/api/admin/payroll-settings", {
+            method: "PUT",
+            headers: authHeaders({ "Content-Type": "application/json" }),
+            body: JSON.stringify({ settings: nextSettings }),
+          });
+          handleAuthExpired(res);
+          const data = await res.json();
+
+          if (!data.success) {
+            alert(data.message || "Gagal menyimpan aturan payroll");
+            return;
+          }
+
+          payrollSettings = data.settings || [];
+          isEditingSettings = false;
+          renderPayrollSettings();
+          alert("Aturan payroll berhasil disimpan.");
+        } catch (error) {
+          alert("Gagal menyimpan aturan payroll.");
+        } finally {
+          button.disabled = false;
+          button.innerText = isEditingSettings ? "Simpan Perubahan" : "Edit Aturan";
+        }
+      }
+
+      function progressBlock(row) {
+        const mobilPercent = row.target?.mobil_percent || 0;
+        const motorPercent = row.target?.motor_percent || 0;
+
+        return `
+          <div class="space-y-2">
+            <div>
+              <div class="mb-1 flex justify-between text-xs font-black text-slate-600">
+                <span>Mobil ${row.m}/${row.target?.mobil || 45}</span>
+                <span>${mobilPercent}%</span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-100">
+                <div class="h-2 rounded-full bg-amber-500" style="width:${mobilPercent}%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="mb-1 flex justify-between text-xs font-black text-slate-600">
+                <span>Motor ${row.t}/${row.target?.motor || 30}</span>
+                <span>${motorPercent}%</span>
+              </div>
+              <div class="h-2 rounded-full bg-slate-100">
+                <div class="h-2 rounded-full bg-emerald-500" style="width:${motorPercent}%"></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadPayrollData() {
+        // Rekap payroll bulanan hanya menghitung transaksi full wash.
+        // Target ditampilkan sebagai informasi performa, bukan penalti.
+        const month = document.getElementById("monthSelect").value;
+        const year = document.getElementById("yearSelect").value;
+        const tbody = document.getElementById("payrollTableBody");
+
+        tbody.innerHTML = `<tr><td colspan="6" class="p-16 text-center text-sm font-black text-amber-600">Menghitung payroll...</td></tr>`;
+
+        try {
+          const res = await fetch(`/api/admin/payroll-recap?month=${month}&year=${year}`, {
+            headers: authHeaders(),
+          });
           handleAuthExpired(res);
           payrollData = await res.json();
 
-          if (payrollData.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-slate-400">Data tidak ditemukan.</td></tr>`;
+          if (!payrollData.length) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-16 text-center text-sm font-bold text-slate-400">Data tidak ditemukan.</td></tr>`;
             return;
           }
 
           tbody.innerHTML = payrollData
             .map(
-              (row, idx) => `
-                <tr class="hover:bg-slate-50 transition-all">
-                    <td class="p-6 font-bold text-slate-900">${row.name}</td>
-                    <td class="p-6 text-center text-sm font-semibold text-slate-600">
-                        <span class="text-blue-600">${row.m} M</span> / <span class="text-orange-600">${row.t} T</span>
-                    </td>
-                    <td class="p-6 text-xs text-slate-400">${formatIDR(row.s1)}</td>
-                    <td class="p-6 text-xs text-slate-400">${formatIDR(row.s2)}</td>
-                    <td class="p-6 font-black text-indigo-600 text-lg">${formatIDR(row.final_salary)}</td>
-                    <td class="p-6 text-right">
-                        <button type="button" data-print-index="${idx}" class="print-slip-btn bg-slate-900 text-white px-5 py-2 rounded-xl text-[10px] font-black hover:scale-105 transition-all cursor-pointer">
-                            PRINT SLIP
-                        </button>
-                    </td>
+              (row, index) => `
+                <tr class="transition hover:bg-slate-50">
+                  <td class="p-5">
+                    <p class="font-black text-slate-900">${row.name}</p>
+                    <p class="mt-1 text-xs font-bold text-slate-400">Slip tanpa penalti target</p>
+                  </td>
+                  <td class="p-5">
+                    <p class="text-lg font-black text-slate-900">${row.fullwash_total || 0}</p>
+                    <p class="text-xs font-bold text-slate-400">${row.m} mobil / ${row.t} motor</p>
+                  </td>
+                  <td class="p-5">${progressBlock(row)}</td>
+                  <td class="p-5 font-black text-emerald-600">${formatIDR(row.daily_bonus_total)}</td>
+                  <td class="p-5 text-lg font-black text-slate-900">${formatIDR(row.payroll_total)}</td>
+                  <td class="p-5 text-right">
+                    <button type="button" data-print-index="${index}" class="print-slip-btn rounded-xl bg-slate-900 px-5 py-2 text-xs font-black text-white transition hover:bg-slate-800">
+                      Print Slip
+                    </button>
+                  </td>
                 </tr>
-            `,
+              `,
             )
             .join("");
-        } catch (err) {
-          tbody.innerHTML = `<tr><td colspan="6" class="p-20 text-center text-red-500 font-bold">Gagal memuat data.</td></tr>`;
+        } catch (error) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-16 text-center text-sm font-black text-red-500">Gagal memuat data.</td></tr>`;
         }
       }
 
-      function printSlip(idx) {
-        const d = payrollData[idx];
-
-        if (!d) {
-          alert("Data slip tidak ditemukan. Silakan klik Tampilkan ulang.");
+      function printSlip(index) {
+        // Slip memakai data rekap yang sudah dihitung backend agar hasilnya konsisten.
+        const data = payrollData[index];
+        if (!data) {
+          alert("Data slip tidak ditemukan.");
           return;
         }
 
-        const mText =
+        const monthText =
           document.getElementById("monthSelect").options[
             document.getElementById("monthSelect").selectedIndex
           ].text;
-        const yText = document.getElementById("yearSelect").value;
-
-        const isBonus = d.bonus_akhir >= 0;
-        const statusText = isBonus ? "BONUS TARGET" : "PENALTI TARGET";
-        const statusDescription = isBonus
-          ? "Tambahan dari kendaraan di atas target"
-          : "Kekurangan dari target kendaraan";
-        const statusColor = isBonus ? "#059669" : "#dc2626";
-        const statusBg = isBonus ? "#ecfdf5" : "#fef2f2";
-        const selectedPath = d.s1 >= d.s2 ? "Jalur 1 (S1)" : "Jalur 2 (S2)";
-        const adjustmentValue = `${isBonus ? "+" : "-"}${formatIDR(Math.abs(d.bonus_akhir))}`;
-
+        const yearText = document.getElementById("yearSelect").value;
         const area = document.getElementById("printArea");
+
         area.innerHTML = `
-            <div style="width: 100%; max-width: 190mm; margin: 0 auto; padding: 25px; font-family: sans-serif; color: #000; background: #fff;">
-                
-                <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 15px;">
-                    <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -1px;">SHINE POS</h1>
-                    <p style="margin: 2px 0; font-size: 10px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #444;">Slip Gaji Karyawan Resmi</p>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <div>
-                        <p style="margin: 0; font-size: 9px; color: #666; font-weight: 800; text-transform: uppercase;">Penerima:</p>
-                        <h2 style="margin: 0; font-size: 18px; font-weight: 900;">${d.name.toUpperCase()}</h2>
-                        <p style="margin: 2px 0; font-size: 11px; font-weight: bold;">Periode: ${mText} ${yText}</p>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}; font-weight: 900; font-size: 12px;">
-                            STATUS: ${statusText}
-                        </div>
-                        <p style="margin: 4px 0 0 0; font-size: 12px; font-weight: bold; color: #444;">Produksi: ${d.m} Mobil | ${d.t} Motor</p>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <div style="flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #888;">HASIL S1</p>
-                        <p style="margin: 2px 0; font-size: 12px; font-weight: 700;">${formatIDR(d.s1)}</p>
-                    </div>
-                    <div style="flex: 1; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #888;">HASIL S2</p>
-                        <p style="margin: 2px 0; font-size: 12px; font-weight: 700;">${formatIDR(d.s2)}</p>
-                    </div>
-                    <div style="flex: 1; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
-                        <p style="margin: 0; font-size: 8px; font-weight: bold; color: #64748b;">JALUR TERPILIH</p>
-                        <p style="margin: 2px 0; font-size: 12px; font-weight: 900; color: #4f46e5;">${selectedPath}</p>
-                    </div>
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
-                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                        <td style="padding: 10px 0; font-weight: 600;">
-                          Pendapatan Dasar Target
-                          <div style="font-size: 9px; color: #777; font-weight: 500; margin-top: 2px;">Nominal dasar berdasarkan target kendaraan</div>
-                        </td>
-                        <td style="padding: 10px 0; text-align: right; font-weight: 700;">${formatIDR(1000000)}</td>
-                    </tr>
-                    <tr style="border-bottom: 2px solid #000;">
-                        <td style="padding: 10px 0; font-weight: 600;">
-                          ${statusText}
-                          <div style="font-size: 9px; color: #777; font-weight: 500; margin-top: 2px;">${statusDescription}</div>
-                        </td>
-                        <td style="padding: 10px 0; text-align: right; font-weight: 800; color: ${statusColor};">${adjustmentValue}</td>
-                    </tr>
-                    <tr style="background: #000; color: #fff;">
-                        <td style="padding: 12px 10px; font-size: 16px; font-weight: 900;">TOTAL GAJI AKHIR</td>
-                        <td style="padding: 12px 10px; text-align: right; font-size: 18px; font-weight: 900;">${formatIDR(d.final_salary)}</td>
-                    </tr>
-                </table>
-
-                <div style="border: 1px solid #e5e7eb; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin: -6px 0 20px 0;">
-                    <p style="margin: 0 0 3px 0; font-size: 9px; font-weight: 900; letter-spacing: 1px; color: #334155;">KETERANGAN</p>
-                    <p style="margin: 0; font-size: 10px; font-weight: 600; color: #475569;">Pendapatan dasar dihitung berdasarkan pencapaian target operasional kendaraan.</p>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 30px;">
-                    <div style="width: 180px;">
-                        <p style="margin: 0 0 40px 0; font-size: 11px; font-weight: bold;">Penerima,</p>
-                        <div style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: 900; font-size: 12px;">${d.name.toUpperCase()}</div>
-                    </div>
-                    <div style="width: 180px;">
-                        <p style="margin: 0 0 40px 0; font-size: 11px; font-weight: bold;">Owner ShinePos,</p>
-                        <div style="border-top: 1.5px solid #000; padding-top: 5px; font-weight: 900; font-size: 12px;">( ............................ )</div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 30px; text-align: center; font-size: 9px; color: #999; font-style: italic; border-top: 1px solid #eee; padding-top: 8px;">
-                    Dicetak otomatis pada ${new Date().toLocaleString("id-ID")}
-                </div>
+          <div style="width:100%; max-width:190mm; margin:0 auto; padding:28px; font-family:'Plus Jakarta Sans', Arial, sans-serif; color:#0f172a; background:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #0f172a; padding-bottom:16px; margin-bottom:20px;">
+              <div>
+                <p style="margin:0; font-size:10px; font-family:Arial Black, sans-serif; font-weight:900; font-style:italic; letter-spacing:2px; line-height:1; transform:skewX(-8deg); background:linear-gradient(110deg, #1f2937 0%, #64748b 34%, #d4a017 68%, #8a5a12 100%); -webkit-background-clip:text; background-clip:text; color:#0f172a; -webkit-text-fill-color:transparent; -webkit-text-stroke:0.25px rgba(15,23,42,0.45); filter:drop-shadow(0 1px 1px rgba(15,23,42,0.22));">PCC. S77</p>
+                <h1 style="margin:4px 0 0; font-size:24px; font-weight:900;">Slip Gaji Karyawan</h1>
+                <p style="margin:4px 0 0; font-size:12px; font-weight:700; color:#64748b;">Periode ${monthText} ${yearText}</p>
+              </div>
+              <div style="text-align:right;">
+                <p style="margin:0; font-size:10px; font-weight:900; color:#64748b;">Penerima</p>
+                <h2 style="margin:4px 0 0; font-size:18px; font-weight:900;">${data.name.toUpperCase()}</h2>
+              </div>
             </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:18px;">
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
+                <p style="margin:0; font-size:9px; font-weight:900; color:#94a3b8;">TOTAL FULL WASH</p>
+                <p style="margin:6px 0 0; font-size:22px; font-weight:900;">${data.fullwash_total || 0}</p>
+              </div>
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
+                <p style="margin:0; font-size:9px; font-weight:900; color:#94a3b8;">MOBIL / MOTOR</p>
+                <p style="margin:6px 0 0; font-size:22px; font-weight:900;">${data.m} / ${data.t}</p>
+              </div>
+              <div style="border:1px solid #e2e8f0; border-radius:14px; padding:14px;">
+                <p style="margin:0; font-size:9px; font-weight:900; color:#94a3b8;">BONUS HARIAN</p>
+                <p style="margin:6px 0 0; font-size:18px; font-weight:900; color:#059669;">${formatIDR(data.daily_bonus_total)}</p>
+              </div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:18px; font-size:13px;">
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:12px 0; font-weight:800;">Payroll full wash reguler</td>
+                <td style="padding:12px 0; text-align:right; font-weight:900;">${formatIDR(data.payroll_total)}</td>
+              </tr>
+              <tr style="border-bottom:1px solid #e2e8f0;">
+                <td style="padding:12px 0; font-weight:800;">Bonus harian</td>
+                <td style="padding:12px 0; text-align:right; font-weight:900; color:#059669;">${formatIDR(data.daily_bonus_total)}</td>
+              </tr>
+              <tr>
+                <td style="padding:12px 0; font-weight:800;">Target S2 sebagai indikator</td>
+                <td style="padding:12px 0; text-align:right; font-weight:900;">Mobil ${data.target?.mobil_percent || 0}% | Motor ${data.target?.motor_percent || 0}%</td>
+              </tr>
+              <tr style="background:#0f172a; color:#fff;">
+                <td style="padding:14px; font-size:16px; font-weight:900;">TOTAL PAYROLL</td>
+                <td style="padding:14px; text-align:right; font-size:18px; font-weight:900;">${formatIDR(data.final_salary)}</td>
+              </tr>
+            </table>
+
+            <div style="border-radius:14px; background:#f8fafc; border:1px solid #e2e8f0; padding:12px; margin-bottom:28px;">
+              <p style="margin:0; font-size:10px; font-weight:900; color:#334155;">KETERANGAN SISTEM</p>
+              <p style="margin:5px 0 0; font-size:11px; font-weight:700; color:#64748b;">
+                Tidak ada minus atau penalti target. Non-target tidak masuk payroll dan tidak masuk slip gaji.
+              </p>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; text-align:center; margin-top:36px;">
+              <div style="width:180px;">
+                <p style="margin:0 0 44px; font-size:11px; font-weight:800;">Penerima,</p>
+                <div style="border-top:1.5px solid #0f172a; padding-top:6px; font-size:12px; font-weight:900;">${data.name.toUpperCase()}</div>
+              </div>
+              <div style="width:180px;">
+                <p style="margin:0 0 44px; font-size:11px; font-weight:800;">Owner Pcc. S77,</p>
+                <div style="border-top:1.5px solid #0f172a; padding-top:6px; font-size:12px; font-weight:900;">( ............................ )</div>
+              </div>
+            </div>
+          </div>
         `;
 
         window.print();
       }
 
-      // Event delegation membuat tombol PRINT SLIP tetap bisa diklik walaupun baris tabel dibuat ulang.
-      document
-        .getElementById("payrollTableBody")
-        .addEventListener("click", (event) => {
-          const button = event.target.closest(".print-slip-btn");
-
-          if (!button) return;
-
-          printSlip(Number(button.dataset.printIndex));
-        });
-
-      // Expose fungsi ini agar tetap tersedia jika browser membaca handler dari atribut HTML.
+      document.getElementById("payrollTableBody").addEventListener("click", (event) => {
+        const button = event.target.closest(".print-slip-btn");
+        if (button) printSlip(Number(button.dataset.printIndex));
+      });
+      loadPayrollSettings();
       window.printSlip = printSlip;
+      window.savePayrollSettings = savePayrollSettings;
+      window.enterSettingsEditMode = enterSettingsEditMode;
+      window.cancelSettingsEditMode = cancelSettingsEditMode;
     </script>
   </body>
 </html>

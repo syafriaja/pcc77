@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - ShinePos</title>
+    <title>Login - Pcc. S77</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap"
@@ -13,13 +13,29 @@
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
       }
+      .brand-mark {
+        display: inline-block;
+        font-family: "Arial Black", "Plus Jakarta Sans", sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0.14em;
+        line-height: 1;
+        transform: skewX(-8deg);
+        background: linear-gradient(110deg, #1f2937 0%, #64748b 34%, #d4a017 68%, #8a5a12 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: #0f172a;
+        -webkit-text-fill-color: transparent;
+        -webkit-text-stroke: 0.45px rgba(15, 23, 42, 0.55);
+        filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.26));
+      }
     </style>
   </head>
   <body class="bg-slate-900 flex items-center justify-center min-h-screen p-6">
     <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md">
       <div class="text-center mb-10">
-        <h1 class="text-4xl font-black italic text-slate-900">
-          SHINE<span class="text-indigo-600">POS</span>
+        <h1 class="text-4xl font-black text-slate-900">
+          <span class="brand-mark">PCC. S77</span>
         </h1>
         <p class="text-slate-400 font-bold mt-2">Masuk ke Dashboard Sistem</p>
       </div>

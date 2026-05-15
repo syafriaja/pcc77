@@ -3,257 +3,317 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - ShinePos</title>
+    <title>Dashboard - Pcc. S77</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
-        background-color: #f8fafc;
+        background: #f8fafc;
       }
-      .btn-active {
-        background-color: #4f46e5 !important;
-        color: white !important;
-        border-color: #4f46e5 !important;
-        transform: scale(0.98);
+      .choice-active {
+        border-color: #d4a017 !important;
+        background: #fffbeb !important;
+        color: #0f172a !important;
+        box-shadow: 0 18px 35px rgba(212, 160, 23, 0.13);
+      }
+      .soft-card {
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        box-shadow: 0 18px 50px rgba(15, 23, 42, 0.06);
+      }
+      .brand-mark {
+        display: inline-block;
+        font-family: "Arial Black", "Plus Jakarta Sans", sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0.16em;
+        line-height: 1;
+        transform: skewX(-8deg);
+        background: linear-gradient(110deg, #1f2937 0%, #64748b 34%, #d4a017 68%, #8a5a12 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: #0f172a;
+        -webkit-text-fill-color: transparent;
+        -webkit-text-stroke: 0.35px rgba(15, 23, 42, 0.45);
+        filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.24));
       }
     </style>
   </head>
-  <body class="p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
-      <!-- Header & Profil -->
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1
-            id="welcomeUser"
-            class="text-2xl font-extrabold text-slate-900 tracking-tight"
-          >
-            Halo, User!
-          </h1>
-          <p
-            id="userRoleBadge"
-            class="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md uppercase tracking-widest inline-block mt-1"
-          >
-            Role: Loading...
-          </p>
-        </div>
-        <button
-          onclick="logout()"
-          class="text-xs font-bold text-red-500 bg-red-50 px-4 py-2 rounded-xl hover:bg-red-100 transition-all"
-        >
-          LOGOUT
-        </button>
-      </div>
-
-      <!-- Dashboard Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div
-          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-        >
-          <p
-            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-          >
-            Mobil
-          </p>
-          <h3 id="totalMobil" class="text-2xl font-black text-slate-900">0</h3>
-        </div>
-        <div
-          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-        >
-          <p
-            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-          >
-            Motor
-          </p>
-          <h3 id="totalMotor" class="text-2xl font-black text-slate-900">0</h3>
-        </div>
-        <div
-          class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100"
-        >
-          <p
-            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-          >
-            Operasional
-          </p>
-          <h3 id="opHours" class="text-xs font-black text-indigo-600 mt-1">
-            --:-- - --:--
-          </h3>
-        </div>
-        <div
-          id="revenueCard"
-          class="hidden bg-slate-900 p-6 rounded-[2rem] shadow-xl"
-        >
-          <p
-            class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-          >
-            Omzet Hari Ini
-          </p>
-          <h3 id="todayRevenue" class="text-lg font-black text-white">Rp 0</h3>
-        </div>
-      </div>
-
-      <!-- Main Form -->
-      <div
-        class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 mb-6"
+  <body class="text-slate-900">
+    <div class="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
+      <button
+        onclick="logout()"
+        class="fixed right-4 top-4 z-40 rounded-2xl bg-red-50 px-4 py-2 text-xs font-black text-red-600 shadow-sm transition hover:bg-red-100 md:right-8 md:top-6"
       >
-        <h2
-          class="text-xl font-black text-slate-900 mb-6 uppercase tracking-tight"
-        >
-          Input Transaksi Baru
-        </h2>
+        Logout
+      </button>
 
-        <form id="transactionForm" class="space-y-6">
-          <!-- Jenis Kendaraan -->
-          <div class="grid grid-cols-2 gap-4">
-            <button
-              type="button"
-              onclick="selectType('mobil')"
-              id="btnMobil"
-              class="p-6 border-2 border-slate-100 rounded-[1.5rem] font-bold text-slate-400 hover:border-indigo-200 transition-all"
-            >
-              🚗 MOBIL
-            </button>
-            <button
-              type="button"
-              onclick="selectType('motor')"
-              id="btnMotor"
-              class="p-6 border-2 border-slate-100 rounded-[1.5rem] font-bold text-slate-400 hover:border-indigo-200 transition-all"
-            >
-              🏍️ MOTOR
-            </button>
-            <input type="hidden" id="vehicleType" required />
-          </div>
-          <div>
-            <label
-              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1"
-              >Merek Kendaraan</label
-            >
-            <input
-              type="text"
-              id="vehicleBrand"
-              placeholder="Contoh: Calya, Avanza, NMAX"
-              class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
-              required
-            />
-          </div>
+      <header class="mb-8 flex flex-col gap-4 pr-24 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p class="text-sm uppercase">
+            <span class="brand-mark">PCC. S77</span>
+          </p>
+          <h1 id="welcomeUser" class="mt-1 text-3xl font-black tracking-tight">
+            Dashboard
+          </h1>
+          <p id="userRoleBadge" class="mt-2 text-sm font-bold text-slate-500">
+            Role: loading
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a
+            href="/rekap-harian.html"
+            class="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Rekap Harian
+          </a>
+          <a
+            href="/payroll.html"
+            id="payrollLink"
+            class="hidden rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-slate-800"
+          >
+            Payroll
+          </a>
+        </div>
+      </header>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Pilih Petugas -->
-            <div>
-              <label
-                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1"
-                >Pilih Petugas</label
-              >
-              <select
-                id="employeeId"
-                class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
-                required
-              >
-                <option value="">Loading...</option>
-              </select>
+      <main class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <section class="space-y-6">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="soft-card rounded-3xl p-5">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Full Wash
+              </p>
+              <h2 id="totalFullwash" class="mt-3 text-3xl font-black">0</h2>
             </div>
-            <!-- Input Harga -->
+            <div class="soft-card rounded-3xl p-5">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Mobil
+              </p>
+              <h2 id="totalMobil" class="mt-3 text-3xl font-black">0</h2>
+            </div>
+            <div class="soft-card rounded-3xl p-5">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Motor
+              </p>
+              <h2 id="totalMotor" class="mt-3 text-3xl font-black">0</h2>
+            </div>
+            <div class="soft-card rounded-3xl bg-slate-900 p-5 text-white">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Estimasi Upah Full Wash
+              </p>
+              <h2 id="payrollEstimate" class="mt-3 text-2xl font-black">Rp 0</h2>
+            </div>
+          </div>
+
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="soft-card rounded-3xl p-6">
+              <div class="mb-5 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                    Progress Target S2
+                  </p>
+                  <h3 class="mt-1 text-lg font-black">Indikator performa</h3>
+                </div>
+                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                  Tanpa penalti
+                </span>
+              </div>
+              <div class="space-y-5">
+                <div>
+                  <div class="mb-2 flex justify-between text-sm font-black">
+                    <span>Mobil</span>
+                    <span id="mobilTargetText">0/45</span>
+                  </div>
+                  <div class="h-3 rounded-full bg-slate-100">
+                    <div id="mobilTargetBar" class="h-3 rounded-full bg-amber-500" style="width: 0%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="mb-2 flex justify-between text-sm font-black">
+                    <span>Motor</span>
+                    <span id="motorTargetText">0/30</span>
+                  </div>
+                  <div class="h-3 rounded-full bg-slate-100">
+                    <div id="motorTargetBar" class="h-3 rounded-full bg-emerald-500" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="soft-card rounded-3xl p-6">
+              <p class="text-xs font-black uppercase tracking-widest text-slate-400">
+                Bonus Harian
+              </p>
+              <div class="mt-5 grid grid-cols-2 gap-4">
+                <div class="rounded-2xl bg-amber-50 p-4">
+                  <p class="text-xs font-black uppercase text-amber-700">Mobil</p>
+                  <h3 id="bonusMobil" class="mt-2 text-xl font-black">Rp 0</h3>
+                </div>
+                <div class="rounded-2xl bg-emerald-50 p-4">
+                  <p class="text-xs font-black uppercase text-emerald-700">Motor</p>
+                  <h3 id="bonusMotor" class="mt-2 text-xl font-black">Rp 0</h3>
+                </div>
+              </div>
+              <div class="mt-5 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-slate-600">
+                Full wash masuk payroll dan target. Non-target dibayar langsung,
+                tidak masuk payroll, tidak masuk slip gaji.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="soft-card rounded-[2rem] p-6 md:p-8">
+          <div class="mb-6">
+            <p class="text-xs font-black uppercase tracking-widest text-amber-600">
+              Input kendaraan
+            </p>
+            <h2 class="mt-1 text-2xl font-black tracking-tight">
+              Transaksi baru
+            </h2>
+          </div>
+
+          <form id="transactionForm" class="space-y-5">
             <div>
-              <label
-                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1"
-                >Harga Cuci (Rp)</label
-              >
+              <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                Jenis kendaraan
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="btnMobil" onclick="selectType('mobil')" class="rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 text-left font-black text-slate-500 transition hover:border-amber-200">
+                  <span class="block text-2xl">CAR</span>
+                  Mobil
+                </button>
+                <button type="button" id="btnMotor" onclick="selectType('motor')" class="rounded-2xl border-2 border-slate-100 bg-slate-50 p-5 text-left font-black text-slate-500 transition hover:border-amber-200">
+                  <span class="block text-2xl">BIKE</span>
+                  Motor
+                </button>
+              </div>
+              <input type="hidden" id="vehicleType" required />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                Ukuran
+              </label>
+              <div id="sizeChoices" class="grid grid-cols-3 gap-3"></div>
+              <input type="hidden" id="vehicleSize" required />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                Kategori layanan
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <button type="button" id="btnFullwash" onclick="selectService('fullwash')" class="choice-active rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 text-left text-sm font-black text-slate-500 transition">
+                  Full Wash
+                  <span class="mt-1 block text-xs font-bold text-slate-500">Payroll + target</span>
+                </button>
+                <button type="button" id="btnNonTarget" onclick="selectService('non_target')" class="rounded-2xl border-2 border-slate-100 bg-rose-50 p-4 text-left text-sm font-black text-rose-600 transition">
+                  Non Target
+                  <span class="mt-1 block text-xs font-bold text-rose-500">Dibayar langsung</span>
+                </button>
+              </div>
+              <input type="hidden" id="serviceCategory" value="fullwash" required />
+            </div>
+
+            <div>
+              <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                Merek kendaraan
+              </label>
               <input
                 type="text"
-                inputmode="numeric"
-                id="washPrice"
-                oninput="formatPrice(this)"
-                placeholder="Contoh: Rp 50.000"
-                class="w-full p-4 bg-slate-50 rounded-2xl font-bold border-none outline-indigo-500"
+                id="vehicleBrand"
+                placeholder="Contoh: Avanza, Calya, NMAX"
+                class="w-full rounded-2xl bg-slate-50 p-4 font-bold outline-amber-500"
                 required
               />
             </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+              <div>
+                <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                  Petugas
+                </label>
+                <select id="employeeId" class="w-full rounded-2xl bg-slate-50 p-4 font-bold outline-amber-500" required>
+                  <option value="">Loading...</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                  Harga wash
+                </label>
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  id="washPrice"
+                  oninput="formatPrice(this)"
+                  placeholder="Rp 50.000"
+                  class="w-full rounded-2xl bg-slate-50 p-4 font-bold outline-amber-500"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="submitBtn"
+              class="w-full rounded-2xl bg-amber-500 py-5 font-black uppercase tracking-widest text-slate-950 shadow-xl shadow-amber-100 transition hover:bg-amber-400 disabled:opacity-60"
+            >
+              Simpan Transaksi
+            </button>
+          </form>
+        </section>
+      </main>
+
+      <section class="mt-8">
+        <div class="soft-card flex flex-col gap-4 rounded-[2rem] p-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-widest text-amber-600">
+              Tentang
+            </p>
+            <h2 class="mt-1 text-xl font-black tracking-tight">
+              Panduan sistem Pcc. S77
+            </h2>
           </div>
-
-          <button
-            type="submit"
-            id="submitBtn"
-            class="w-full bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all uppercase tracking-widest"
+          <a
+            href="/tentang.html"
+            class="rounded-2xl bg-slate-900 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-slate-800"
           >
-            Simpan Transaksi
-          </button>
-        </form>
-      </div>
-
-      <!-- Navigasi Tambahan -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <a
-          href="/rekap-harian.html"
-          class="bg-white p-4 rounded-2xl border border-slate-100 text-center font-bold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
-        >
-          📋 LIHAT REKAP HARIAN
-        </a>
-        <a
-          href="/payroll.html"
-          id="payrollLink"
-          class="hidden bg-slate-100 p-4 rounded-2xl text-center font-bold text-slate-900 hover:bg-slate-200 transition-all"
-        >
-          💰 MANAJEMEN GAJI (OWNER)
-        </a>
-      </div>
+            Buka Tentang
+          </a>
+        </div>
+      </section>
     </div>
 
-    <!-- Script untuk interaktivitas dan koneksi backend -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="/js/realtime.js"></script>
-
-    <!-- Toast Notification -->
-    <div
-      id="toast"
-      class="fixed top-5 right-5 z-50 hidden opacity-0 -translate-y-2 px-5 py-3 rounded-2xl shadow-lg text-sm font-bold bg-green-600 text-white transition-all duration-300"
-    >
+    <div id="toast" class="fixed right-5 top-5 z-50 hidden rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-lg">
       Berhasil disimpan
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="/js/realtime.js"></script>
     <script>
-      function showToast(message = "Berhasil disimpan") {
-        const toast = document.getElementById("toast");
-
-        toast.innerText = message;
-        toast.classList.remove("hidden");
-
-        setTimeout(() => {
-          toast.classList.add("hidden");
-        }, 2500);
-      }
-      function formatPrice(input) {
-        let value = input.value.replace(/[^0-9]/g, "");
-
-        if (!value) {
-          input.value = "";
-          return;
-        }
-
-        input.value = new Intl.NumberFormat("id-ID", {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const token = localStorage.getItem("token");
+      const formatIDR = (n) =>
+        new Intl.NumberFormat("id-ID", {
           style: "currency",
           currency: "IDR",
           maximumFractionDigits: 0,
-        }).format(value);
-      }
-      // CEK LOGIN
-      const user = JSON.parse(localStorage.getItem("user"));
-      const token = localStorage.getItem("token");
+        }).format(n || 0);
+
       if (!user || !token) {
         window.location.href = "/login.html";
         throw new Error("Login diperlukan");
       }
 
-      // Header ini dikirim ke API agar backend bisa memverifikasi user yang sedang login.
       function authHeaders(extraHeaders = {}) {
-        return {
-          ...extraHeaders,
-          Authorization: `Bearer ${token}`,
-        };
+        return { ...extraHeaders, Authorization: `Bearer ${token}` };
       }
 
-      // Jika token sudah expired/invalid, user diarahkan login ulang.
       function handleAuthExpired(res) {
         if (res.status === 401) {
           localStorage.removeItem("user");
@@ -263,107 +323,163 @@
         }
       }
 
-      // Tampilan berdasarkan Role
-      document.getElementById("welcomeUser").innerText =
-        `Halo, ${user.username}!`;
+      const displayNameMap = {
+        bos1: "bos",
+        kasir1: "kasir",
+      };
+      const displayUsername = displayNameMap[user.username] || user.username;
+
+      document.getElementById("welcomeUser").innerText = `Halo, ${displayUsername}`;
       document.getElementById("userRoleBadge").innerText = `Role: ${user.role}`;
+      if (user.role === "owner") document.getElementById("payrollLink").classList.remove("hidden");
 
-      if (user.role === "owner") {
-        document.getElementById("revenueCard").classList.remove("hidden");
-        document.getElementById("payrollLink").classList.remove("hidden");
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 2500);
       }
 
-      // Pilihan Kendaraan
+      function formatPrice(input) {
+        const value = input.value.replace(/[^0-9]/g, "");
+        input.value = value ? formatIDR(value) : "";
+      }
+
+      function setActive(group, activeId) {
+        group.forEach((id) => document.getElementById(id).classList.remove("choice-active"));
+        if (activeId) document.getElementById(activeId).classList.add("choice-active");
+      }
+
+      function renderSizeChoices(type) {
+        const sizes = type === "motor" ? ["kecil", "besar"] : ["kecil", "sedang", "besar"];
+        const wrap = document.getElementById("sizeChoices");
+        wrap.innerHTML = sizes
+          .map(
+            (size) => `
+              <button type="button" id="size-${size}" onclick="selectSize('${size}')" class="rounded-2xl border-2 border-slate-100 bg-slate-50 p-4 text-sm font-black capitalize text-slate-500 transition hover:border-amber-200">
+                ${size}
+              </button>
+            `,
+          )
+          .join("");
+        selectSize(sizes[0]);
+      }
+
       function selectType(type) {
+        // Saat jenis kendaraan dipilih, pilihan ukuran ikut disesuaikan.
+        // Motor hanya punya kecil/besar, mobil punya kecil/sedang/besar.
         document.getElementById("vehicleType").value = type;
-        document.getElementById("btnMobil").classList.remove("btn-active");
-        document.getElementById("btnMotor").classList.remove("btn-active");
-
-        if (type === "mobil")
-          document.getElementById("btnMobil").classList.add("btn-active");
-        if (type === "motor")
-          document.getElementById("btnMotor").classList.add("btn-active");
+        setActive(["btnMobil", "btnMotor"], type === "mobil" ? "btnMobil" : "btnMotor");
+        renderSizeChoices(type);
       }
 
-      // Simpan Transaksi
-      document.getElementById("transactionForm").onsubmit = async (e) => {
-        e.preventDefault();
+      function selectSize(size) {
+        document.getElementById("vehicleSize").value = size;
+        ["kecil", "sedang", "besar"].forEach((item) => {
+          const btn = document.getElementById(`size-${item}`);
+          if (btn) btn.classList.toggle("choice-active", item === size);
+        });
+      }
+
+      function selectService(service) {
+        // Full Wash masuk payroll dan target. Non Target dibayar langsung.
+        document.getElementById("serviceCategory").value = service;
+        setActive(["btnFullwash", "btnNonTarget"], service === "fullwash" ? "btnFullwash" : "btnNonTarget");
+      }
+
+      document.getElementById("transactionForm").onsubmit = async (event) => {
+        event.preventDefault();
         const btn = document.getElementById("submitBtn");
-        const type = document.getElementById("vehicleType").value;
+        const payload = {
+          vehicle_type: document.getElementById("vehicleType").value,
+          vehicle_size: document.getElementById("vehicleSize").value,
+          service_category: document.getElementById("serviceCategory").value,
+          vehicle_brand: document.getElementById("vehicleBrand").value,
+          employee_id: document.getElementById("employeeId").value,
+          price: document.getElementById("washPrice").value.replace(/[^0-9]/g, ""),
+        };
 
-        if (!type) return alert("Silakan pilih jenis kendaraan!");
+        if (!payload.vehicle_type) return alert("Silakan pilih jenis kendaraan.");
 
-        btn.innerText = "MENYIMPAN...";
+        btn.innerText = "Menyimpan...";
         btn.disabled = true;
 
         try {
+          // Data dikirim ke backend agar nilai payroll dan bonus dihitung
+          // dari aturan resmi, bukan dari browser.
           const res = await fetch("/api/transactions", {
             method: "POST",
             headers: authHeaders({ "Content-Type": "application/json" }),
-            body: JSON.stringify({
-              vehicle_type: type,
-              vehicle_brand: document.getElementById("vehicleBrand").value,
-              employee_id: document.getElementById("employeeId").value,
-              price: document
-                .getElementById("washPrice")
-                .value.replace(/[^0-9]/g, ""), // Hapus karakter non-digit
-            }),
+            body: JSON.stringify(payload),
           });
           handleAuthExpired(res);
-
           const data = await res.json();
-          if (data.success) {
-            showToast("Kendaraan berhasil ditambahkan");
-            document.getElementById("transactionForm").reset();
-            selectType(""); // Reset button color
-            refreshStats(); // Update dashboard stats langsung
-          } else {
-            alert("Gagal: " + data.message);
+
+          if (!data.success) {
+            alert(`Gagal: ${data.message}`);
+            return;
           }
-        } catch (err) {
-          alert("Kesalahan koneksi!");
+
+          showToast("Kendaraan berhasil ditambahkan");
+          event.target.reset();
+          selectType("mobil");
+          selectService("fullwash");
+          refreshStats();
+        } catch (error) {
+          alert("Kesalahan koneksi.");
         } finally {
           btn.innerText = "Simpan Transaksi";
           btn.disabled = false;
         }
       };
 
-      // Update Statistik Dashboard
       async function refreshStats() {
-        // Tanggal dashboard harus mengikuti Makassar, bukan UTC dari toISOString().
+        // Dashboard selalu mengambil data hari ini versi Makassar,
+        // supaya rekap cocok dengan jam operasional toko.
         const today = new Intl.DateTimeFormat("en-CA", {
           timeZone: "Asia/Makassar",
         }).format(new Date());
+
         try {
-          const res = await fetch(
-            `/api/rekap-harian?date=${today}`,
-            {
-              headers: authHeaders(),
-            },
-          );
+          const res = await fetch(`/api/rekap-harian?date=${today}`, {
+            headers: authHeaders(),
+          });
           handleAuthExpired(res);
           const data = await res.json();
+          const summary = data.summary || {};
 
-          document.getElementById("totalMobil").innerText =
-            data.summary.mobil || 0;
-          document.getElementById("totalMotor").innerText =
-            data.summary.motor || 0;
-          document.getElementById("opHours").innerText =
-            `${data.summary.startTime} - ${data.summary.lastTime}`;
+          document.getElementById("totalFullwash").innerText = summary.fullwash || 0;
+          document.getElementById("totalMobil").innerText = summary.mobil || 0;
+          document.getElementById("totalMotor").innerText = summary.motor || 0;
+          document.getElementById("payrollEstimate").innerText = formatIDR(summary.payrollEstimate);
+          document.getElementById("bonusMobil").innerText = formatIDR(summary.bonusMobil);
+          document.getElementById("bonusMotor").innerText = formatIDR(summary.bonusMotor);
+          document.getElementById("mobilTargetText").innerText = `${summary.mobil || 0}/${summary.mobilTarget || 45} (${summary.mobilTargetPercent || 0}%)`;
+          document.getElementById("motorTargetText").innerText = `${summary.motor || 0}/${summary.motorTarget || 30} (${summary.motorTargetPercent || 0}%)`;
+          document.getElementById("mobilTargetBar").style.width = `${summary.mobilTargetPercent || 0}%`;
+          document.getElementById("motorTargetBar").style.width = `${summary.motorTargetPercent || 0}%`;
+        } catch (error) {
+          console.error("Gagal update statistik", error);
+        }
+      }
 
-          if (user.role === "owner") {
-            const formatIDR = (n) =>
-              new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                maximumFractionDigits: 0,
-              }).format(n);
-            document.getElementById("todayRevenue").innerText = formatIDR(
-              data.summary.revenue || 0,
-            );
-          }
-        } catch (e) {
-          console.error("Gagal update statistik.");
+      async function loadEmployees() {
+        // Daftar petugas diambil dari Supabase lewat backend.
+        // Jadi owner tidak perlu mengubah kode kalau ada karyawan baru.
+        try {
+          const res = await fetch("/api/employees", { headers: authHeaders() });
+          handleAuthExpired(res);
+          const data = await res.json();
+          const select = document.getElementById("employeeId");
+          select.innerHTML = '<option value="">Pilih karyawan...</option>';
+          data.forEach((emp) => {
+            const option = document.createElement("option");
+            option.value = emp.id;
+            option.textContent = emp.name;
+            select.appendChild(option);
+          });
+        } catch (error) {
+          console.error("Gagal load employees", error);
         }
       }
 
@@ -373,39 +489,12 @@
         window.location.href = "/login.html";
       }
 
-      // Jalankan saat load pertama
+      selectType("mobil");
+      selectService("fullwash");
+      loadEmployees();
       refreshStats();
-
-      async function loadEmployees() {
-        try {
-          const res = await fetch("/api/employees", {
-            headers: authHeaders(),
-          });
-          handleAuthExpired(res);
-          const data = await res.json();
-
-          const select = document.getElementById("employeeId");
-
-          // reset dropdown
-          select.innerHTML = '<option value="">Pilih Karyawan...</option>';
-
-          // isi dari database
-          data.forEach((emp) => {
-            const option = document.createElement("option");
-            option.value = emp.id; // ID untuk backend
-            option.textContent = emp.name; // Nama untuk tampilan
-            select.appendChild(option);
-          });
-        } catch (error) {
-          console.error("Gagal load employees:", error);
-        }
-      }
-
-      // jalankan saat halaman siap
-      document.addEventListener("DOMContentLoaded", loadEmployees);
-      window.addEventListener("refresh-data", () => {
-        refreshStats();
-      });
+      // Event ini dikirim oleh realtime.js setiap ada perubahan di Supabase.
+      window.addEventListener("refresh-data", refreshStats);
     </script>
   </body>
 </html>

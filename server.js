@@ -23,6 +23,149 @@ const AUTH_TOKEN_SECRET =
 const APP_TIMEZONE = "Asia/Makassar";
 const APP_UTC_OFFSET = "+08:00";
 
+// Aturan bawaan ini dipakai saat tabel payroll_settings belum tersedia.
+// Owner tetap bisa mengubah nominalnya dari halaman Payroll setelah tabel dibuat.
+const DEFAULT_COMPENSATION_SETTINGS = [
+  {
+    key: "mobil_kecil",
+    label: "Mobil kecil",
+    vehicle_type: "mobil",
+    vehicle_size: "kecil",
+    payroll_value: 23000,
+    daily_bonus_value: 7000,
+  },
+  {
+    key: "mobil_sedang",
+    label: "Mobil sedang",
+    vehicle_type: "mobil",
+    vehicle_size: "sedang",
+    payroll_value: 27000,
+    daily_bonus_value: 8000,
+  },
+  {
+    key: "mobil_besar",
+    label: "Mobil besar",
+    vehicle_type: "mobil",
+    vehicle_size: "besar",
+    payroll_value: 31000,
+    daily_bonus_value: 9000,
+  },
+  {
+    key: "motor_kecil",
+    label: "Motor kecil",
+    vehicle_type: "motor",
+    vehicle_size: "kecil",
+    payroll_value: 7000,
+    daily_bonus_value: 3000,
+  },
+  {
+    key: "motor_besar",
+    label: "Motor besar",
+    vehicle_type: "motor",
+    vehicle_size: "besar",
+    payroll_value: 11000,
+    daily_bonus_value: 4000,
+  },
+];
+
+const DEFAULT_COMPENSATION_MAP = Object.fromEntries(
+  DEFAULT_COMPENSATION_SETTINGS.map((setting) => [setting.key, setting]),
+);
+
+const TARGET_MAP = {
+  mobil: 45,
+  motor: 30,
+};
+
+function isFullWash(transaction) {
+  return (transaction.service_category || "fullwash") === "fullwash";
+}
+
+// Kunci seperti "mobil_kecil" dipakai agar aturan upah mudah dicocokkan
+// dengan jenis dan ukuran kendaraan.
+function getCompensationKey(vehicleType, vehicleSize) {
+  const normalizedSize =
+    vehicleSize || (vehicleType === "motor" ? "kecil" : "sedang");
+  return `${vehicleType}_${normalizedSize}`;
+}
+
+function normalizeCompensationSettings(settings = []) {
+  return DEFAULT_COMPENSATION_SETTINGS.map((defaultSetting) => {
+    const savedSetting = settings.find(
+      (setting) => setting.key === defaultSetting.key,
+    );
+
+    return {
+      ...defaultSetting,
+      payroll_value: hasStoredNumber(savedSetting?.payroll_value)
+        ? Number(savedSetting.payroll_value)
+        : defaultSetting.payroll_value,
+      daily_bonus_value: hasStoredNumber(savedSetting?.daily_bonus_value)
+        ? Number(savedSetting.daily_bonus_value)
+        : defaultSetting.daily_bonus_value,
+    };
+  });
+}
+
+// Mengambil aturan payroll dari Supabase. Kalau gagal, sistem tetap jalan
+// memakai nilai bawaan agar transaksi kasir tidak ikut berhenti.
+async function getCompensationSettings() {
+  const { data, error } = await supabase
+    .from("payroll_settings")
+    .select(
+      "key, label, vehicle_type, vehicle_size, payroll_value, daily_bonus_value",
+    );
+
+  if (error) {
+    console.warn("Payroll settings fallback:", error.message);
+    return DEFAULT_COMPENSATION_SETTINGS;
+  }
+
+  return normalizeCompensationSettings(data || []);
+}
+
+async function getCompensationMap() {
+  const settings = await getCompensationSettings();
+  return Object.fromEntries(settings.map((setting) => [setting.key, setting]));
+}
+
+// Bonus harian sekarang nominal tetap per jenis/ukuran kendaraan,
+// bukan persentase dari harga wash.
+function calculateBonus(vehicleType, vehicleSize, serviceCategory, settingsMap) {
+  if (serviceCategory !== "fullwash") return 0;
+  const setting =
+    settingsMap?.[getCompensationKey(vehicleType, vehicleSize)] ||
+    DEFAULT_COMPENSATION_MAP[getCompensationKey(vehicleType, vehicleSize)];
+
+  return setting?.daily_bonus_value || 0;
+}
+
+function calculatePayrollValue(
+  vehicleType,
+  vehicleSize,
+  serviceCategory,
+  settingsMap,
+) {
+  // Non-target dibayar langsung, jadi tidak boleh masuk payroll.
+  if (serviceCategory !== "fullwash") return 0;
+  const setting =
+    settingsMap?.[getCompensationKey(vehicleType, vehicleSize)] ||
+    DEFAULT_COMPENSATION_MAP[getCompensationKey(vehicleType, vehicleSize)];
+
+  return setting?.payroll_value || 0;
+}
+
+function getTargetProgress(count, target) {
+  if (!target) return 0;
+  return Math.min(Math.round((count / target) * 100), 100);
+}
+
+function hasStoredNumber(value) {
+  return (
+    value !== null && value !== undefined && Number.isFinite(Number(value))
+  );
+}
+
 // Menghasilkan tanggal hari ini versi Makassar dalam format YYYY-MM-DD.
 function getMakassarDateString(date = new Date()) {
   return date.toLocaleDateString("en-CA", {
@@ -213,19 +356,59 @@ app.get("/api/employees", requireAuth, async (req, res) => {
 
 // --- TRANSAKSI & AKTIVITAS CUCI ---
 app.post("/api/transactions", requireAuth, async (req, res) => {
-  const { vehicle_type, vehicle_brand, employee_id, price } = req.body;
+  const {
+    vehicle_type,
+    vehicle_size,
+    service_category,
+    vehicle_brand,
+    employee_id,
+    price,
+  } = req.body;
 
   try {
     // Validasi backend tetap diperlukan walaupun input frontend sudah memakai required.
     const normalizedVehicleType =
       typeof vehicle_type === "string" ? vehicle_type.toLowerCase().trim() : "";
+    const normalizedVehicleSize =
+      typeof vehicle_size === "string" ? vehicle_size.toLowerCase().trim() : "";
+    const normalizedServiceCategory =
+      typeof service_category === "string"
+        ? service_category.toLowerCase().trim()
+        : "fullwash";
     const normalizedBrand =
       typeof vehicle_brand === "string" ? vehicle_brand.trim() : "";
     const employeeId = Number(employee_id);
     const parsedPrice = Number(price);
 
+    // Validasi ini menjaga data yang masuk tetap sesuai pilihan resmi di aplikasi.
     if (!["mobil", "motor"].includes(normalizedVehicleType)) {
       return sendValidationError(res, "Jenis kendaraan harus mobil atau motor");
+    }
+
+    if (!["kecil", "sedang", "besar"].includes(normalizedVehicleSize)) {
+      return sendValidationError(
+        res,
+        "Ukuran kendaraan harus kecil, sedang, atau besar",
+      );
+    }
+
+    if (!["fullwash", "non_target"].includes(normalizedServiceCategory)) {
+      return sendValidationError(
+        res,
+        "Kategori layanan harus fullwash atau non_target",
+      );
+    }
+
+    if (
+      normalizedServiceCategory === "fullwash" &&
+      !DEFAULT_COMPENSATION_MAP[
+        getCompensationKey(normalizedVehicleType, normalizedVehicleSize)
+      ]
+    ) {
+      return sendValidationError(
+        res,
+        "Kombinasi kendaraan dan ukuran belum memiliki nilai payroll",
+      );
     }
 
     if (!normalizedBrand || normalizedBrand.length > 80) {
@@ -246,7 +429,7 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
     // Pastikan transaksi hanya memakai petugas yang benar-benar ada di tabel employees.
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
-      .select("id")
+      .select("id, name")
       .eq("id", employeeId)
       .single();
 
@@ -254,15 +437,37 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
       return sendValidationError(res, "Petugas tidak ditemukan");
     }
 
+    // Nilai payroll dan bonus disimpan ke transaksi saat dibuat.
+    // Dengan begitu, transaksi lama tidak berubah walaupun aturan diedit nanti.
+    const compensationMap = await getCompensationMap();
+    const bonusAmount = calculateBonus(
+      normalizedVehicleType,
+      normalizedVehicleSize,
+      normalizedServiceCategory,
+      compensationMap,
+    );
+    const payrollValue = calculatePayrollValue(
+      normalizedVehicleType,
+      normalizedVehicleSize,
+      normalizedServiceCategory,
+      compensationMap,
+    );
+
     const { data, error } = await supabase
       .from("wash_transactions")
       .insert([
         {
           vehicle_type: normalizedVehicleType,
+          vehicle_size: normalizedVehicleSize,
+          service_category: normalizedServiceCategory,
           vehicle_brand: normalizedBrand,
           status: "dalam_antrian",
           employee_id: employeeId,
+          employee_name: employee.name,
           price: parsedPrice,
+          bonus_amount: bonusAmount,
+          payroll_value: payrollValue,
+          input_by: req.user.role,
         },
       ])
       .select();
@@ -403,6 +608,80 @@ app.post("/api/expenses", requireAuth, requireOwner, async (req, res) => {
   res.json({ success: true });
 });
 
+app.get(
+  "/api/admin/payroll-settings",
+  requireAuth,
+  requireOwner,
+  async (req, res) => {
+    try {
+      const settings = await getCompensationSettings();
+      res.json({ success: true, settings });
+    } catch (error) {
+      console.error("Payroll Settings Error:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Gagal memuat aturan payroll",
+      });
+    }
+  },
+);
+
+// Endpoint ini dipakai owner untuk mengubah aturan upah dari halaman Payroll.
+// Perubahan hanya memengaruhi transaksi baru setelah disimpan.
+app.put(
+  "/api/admin/payroll-settings",
+  requireAuth,
+  requireOwner,
+  async (req, res) => {
+    const { settings } = req.body;
+
+    if (!Array.isArray(settings)) {
+      return sendValidationError(res, "Format aturan payroll tidak valid");
+    }
+
+    const normalizedSettings = normalizeCompensationSettings(settings);
+
+    for (const setting of normalizedSettings) {
+      if (
+        !Number.isFinite(setting.payroll_value) ||
+        setting.payroll_value < 0 ||
+        !Number.isFinite(setting.daily_bonus_value) ||
+        setting.daily_bonus_value < 0
+      ) {
+        return sendValidationError(
+          res,
+          "Nilai payroll dan bonus harian tidak boleh minus",
+        );
+      }
+    }
+
+    const settingsToSave = normalizedSettings.map((setting) => ({
+      ...setting,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { data, error } = await supabase
+      .from("payroll_settings")
+      .upsert(settingsToSave, { onConflict: "key" })
+      .select(
+        "key, label, vehicle_type, vehicle_size, payroll_value, daily_bonus_value",
+      );
+
+    if (error) {
+      console.error("Update Payroll Settings Error:", error.message);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.json({
+      success: true,
+      settings: normalizeCompensationSettings(data || normalizedSettings),
+    });
+  },
+);
+
 app.get("/api/wash-activity", requireAuth, async (req, res) => {
   // Aktivitas cuci hari ini difilter dari jam 00:00 sampai 23:59 versi Makassar.
   const today = getMakassarDateString();
@@ -415,9 +694,13 @@ app.get("/api/wash-activity", requireAuth, async (req, res) => {
     .order("created_at", { ascending: false });
 
   const summary = {
-    total: logs?.length || 0,
-    mobil: logs?.filter((l) => l.vehicle_type === "mobil").length || 0,
-    motor: logs?.filter((l) => l.vehicle_type === "motor").length || 0,
+    total: logs?.filter(isFullWash).length || 0,
+    mobil:
+      logs?.filter((l) => isFullWash(l) && l.vehicle_type === "mobil").length ||
+      0,
+    motor:
+      logs?.filter((l) => isFullWash(l) && l.vehicle_type === "motor").length ||
+      0,
   };
   res.json({ logs, summary });
 });
@@ -447,45 +730,78 @@ app.get(
       // 3. Ambil transaksi cucian pada periode tersebut
       const { data: transactions, error: transError } = await supabase
         .from("wash_transactions")
-        .select("vehicle_type, employee_id")
+        .select(
+          "vehicle_type, vehicle_size, service_category, employee_id, price, bonus_amount, payroll_value",
+        )
         .gte("created_at", startDate)
         .lte("created_at", endDate);
 
       if (transError) throw transError;
 
+      const compensationMap = await getCompensationMap();
+
+      // Rekap payroll hanya mengambil transaksi full wash.
+      // Non-target sengaja disaring keluar dari perhitungan gaji dan slip.
       // 4. Hitung rekap gaji per karyawan
       const recap = employees.map((emp) => {
-        const empTrans = transactions.filter((t) => t.employee_id === emp.id);
+        const empTrans = transactions.filter(
+          (t) => t.employee_id === emp.id && isFullWash(t),
+        );
 
-        // Hitung jumlah unit (case insensitive)
         const m = empTrans.filter(
           (t) => t.vehicle_type.toLowerCase() === "mobil",
         ).length;
         const t = empTrans.filter(
           (t) => t.vehicle_type.toLowerCase() === "motor",
         ).length;
+        const payrollTotal = empTrans.reduce((sum, transaction) => {
+          const storedValue = Number(transaction.payroll_value);
+          const fallbackValue = calculatePayrollValue(
+            transaction.vehicle_type,
+            transaction.vehicle_size,
+            transaction.service_category || "fullwash",
+            compensationMap,
+          );
 
-        const gajiPokok = 1000000;
+          return (
+            sum +
+            (hasStoredNumber(transaction.payroll_value)
+              ? storedValue
+              : fallbackValue)
+          );
+        }, 0);
+        const bonusTotal = empTrans.reduce((sum, transaction) => {
+          const storedBonus = Number(transaction.bonus_amount);
+          const fallbackBonus = calculateBonus(
+            transaction.vehicle_type,
+            transaction.vehicle_size,
+            transaction.service_category || "fullwash",
+            compensationMap,
+          );
 
-        // Jalur 1 (S1) = (Mobil - 40) * 27rb + Motor * 10rb
-        const s1 = (m - 40) * 27000 + t * 10000;
-
-        // Jalur 2 (S2) = (Mobil - 30) * 27rb + (Motor - 20) * 10rb
-        const s2 = (m - 30) * 27000 + (t - 20) * 10000;
-
-        // Ambil bonus terbesar (bisa bernilai minus jika tidak capai target)
-        const bonusAkhir = Math.max(s1, s2);
-        const finalSalary = gajiPokok + bonusAkhir;
+          return (
+            sum +
+            (hasStoredNumber(transaction.bonus_amount)
+              ? storedBonus
+              : fallbackBonus)
+          );
+        }, 0);
 
         return {
           id: emp.id,
           name: emp.name,
           m,
           t,
-          s1,
-          s2,
-          bonus_akhir: bonusAkhir,
-          final_salary: finalSalary,
+          fullwash_total: empTrans.length,
+          payroll_total: payrollTotal,
+          daily_bonus_total: bonusTotal,
+          final_salary: payrollTotal,
+          target: {
+            mobil: TARGET_MAP.mobil,
+            motor: TARGET_MAP.motor,
+            mobil_percent: getTargetProgress(m, TARGET_MAP.mobil),
+            motor_percent: getTargetProgress(t, TARGET_MAP.motor),
+          },
         };
       });
       res.json(recap);
@@ -517,9 +833,58 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
 
     if (error) throw error;
 
-    // Hitung Summary
-    const mobil = data.filter((t) => t.vehicle_type === "mobil").length;
-    const motor = data.filter((t) => t.vehicle_type === "motor").length;
+    const compensationMap = await getCompensationMap();
+
+    // Ringkasan dashboard: full wash untuk target/payroll,
+    // semua transaksi untuk operasional, dan non-target tetap terpisah.
+    const fullWashData = data.filter(isFullWash);
+    const mobil = fullWashData.filter((t) => t.vehicle_type === "mobil").length;
+    const motor = fullWashData.filter((t) => t.vehicle_type === "motor").length;
+    const allMobil = data.filter((t) => t.vehicle_type === "mobil").length;
+    const allMotor = data.filter((t) => t.vehicle_type === "motor").length;
+    const payrollEstimate = fullWashData.reduce((sum, t) => {
+      const storedValue = Number(t.payroll_value);
+      const fallbackValue = calculatePayrollValue(
+        t.vehicle_type,
+        t.vehicle_size,
+        t.service_category || "fullwash",
+        compensationMap,
+      );
+
+      return (
+        sum + (hasStoredNumber(t.payroll_value) ? storedValue : fallbackValue)
+      );
+    }, 0);
+    const bonusMobil = fullWashData
+      .filter((t) => t.vehicle_type === "mobil")
+      .reduce(
+        (sum, t) =>
+          sum +
+          (hasStoredNumber(t.bonus_amount)
+            ? Number(t.bonus_amount)
+            : calculateBonus(
+                t.vehicle_type,
+                t.vehicle_size,
+                t.service_category || "fullwash",
+                compensationMap,
+              )),
+        0,
+      );
+    const bonusMotor = fullWashData
+      .filter((t) => t.vehicle_type === "motor")
+      .reduce(
+        (sum, t) =>
+          sum +
+          (hasStoredNumber(t.bonus_amount)
+            ? Number(t.bonus_amount)
+            : calculateBonus(
+                t.vehicle_type,
+                t.vehicle_size,
+                t.service_category || "fullwash",
+                compensationMap,
+              )),
+        0,
+      );
     // Revenue hanya dikirim ke owner; staf tetap bisa melihat rekap kendaraan tanpa omzet.
     const revenue =
       req.user.role === "owner"
@@ -549,7 +914,23 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         : "--:--";
 
     res.json({
-      summary: { mobil, motor, revenue, startTime, lastTime },
+      summary: {
+        mobil,
+        motor,
+        allMobil,
+        allMotor,
+        fullwash: fullWashData.length,
+        payrollEstimate,
+        bonusMobil,
+        bonusMotor,
+        mobilTarget: TARGET_MAP.mobil,
+        motorTarget: TARGET_MAP.motor,
+        mobilTargetPercent: getTargetProgress(mobil, TARGET_MAP.mobil),
+        motorTargetPercent: getTargetProgress(motor, TARGET_MAP.motor),
+        revenue,
+        startTime,
+        lastTime,
+      },
       transactions: data.map((t) => ({
         id: t.id,
         time: new Date(t.created_at).toLocaleTimeString("id-ID", {
@@ -558,10 +939,29 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
           timeZone: "Asia/Makassar",
         }),
         vehicle_type: t.vehicle_type,
+        vehicle_size: t.vehicle_size || "sedang",
+        service_category: t.service_category || "fullwash",
         vehicle_brand: t.vehicle_brand,
         status: t.status,
-        employee_name: t.employees?.name || "N/A",
+        employee_name: t.employee_name || t.employees?.name || "N/A",
         price: t.price,
+        bonus_amount: hasStoredNumber(t.bonus_amount)
+          ? Number(t.bonus_amount)
+          : calculateBonus(
+              t.vehicle_type,
+              t.vehicle_size || "sedang",
+              t.service_category || "fullwash",
+              compensationMap,
+            ),
+        payroll_value: hasStoredNumber(t.payroll_value)
+          ? Number(t.payroll_value)
+          : calculatePayrollValue(
+              t.vehicle_type,
+              t.vehicle_size || "sedang",
+              t.service_category || "fullwash",
+              compensationMap,
+            ),
+        input_by: t.input_by || "staff",
       })),
     });
   } catch (e) {
@@ -574,10 +974,8 @@ app.use((req, res) => {
 });
 
 module.exports = app;
-//app.get("*", (req, res) => {
-//res.sendFile(path.join(__dirname, "public", "index.html"));
-//});
 
-//for render
-//const PORT = process.env.PORT || 3000;
-//app.listen(PORT, () => console.log(`ShinePos running on port ${PORT}`));
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Pcc. S77 running on port ${PORT}`));
+}
