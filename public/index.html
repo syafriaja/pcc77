@@ -314,11 +314,11 @@
                 inputmode="numeric"
                 id="directEmployeePay"
                 oninput="formatPrice(this)"
-                placeholder="Kosongkan jika ikut sistem"
+                placeholder="Kosongkan jika ikut payroll bulanan"
                 class="w-full rounded-2xl bg-slate-50 p-4 font-bold outline-amber-500"
               />
               <p id="directEmployeePayHelp" class="mt-2 text-xs font-bold leading-5 text-slate-400">
-                Untuk Full Wash boleh dikosongkan jika gaji masuk payroll sistem.
+                Isi hanya jika gaji langsung dibayar dari transaksi ini.
               </p>
             </div>
 
@@ -455,11 +455,11 @@
         payInput.placeholder =
           service === "non_target"
             ? "Wajib isi untuk Non Target"
-            : "Kosongkan jika ikut sistem";
+            : "Kosongkan jika ikut payroll bulanan";
         payHelp.innerText =
           service === "non_target"
             ? "Non Target dibayar langsung, jadi nominal gaji karyawan wajib diisi."
-            : "Untuk Full Wash boleh dikosongkan jika gaji masuk payroll sistem.";
+            : "Isi hanya jika gaji langsung dibayar dari transaksi ini.";
         setActive(["btnFullwash", "btnNonTarget"], service === "fullwash" ? "btnFullwash" : "btnNonTarget");
       }
 
