@@ -4,6 +4,7 @@ alter table public.wash_transactions
   add column if not exists employee_name text,
   add column if not exists bonus_amount numeric default 0,
   add column if not exists payroll_value numeric default 0,
+  add column if not exists direct_employee_pay numeric,
   add column if not exists input_by text;
 
 create table if not exists public.operating_expenses (
@@ -68,6 +69,14 @@ begin
     alter table public.wash_transactions
       add constraint wash_transactions_input_by_check
       check (input_by is null or input_by in ('owner', 'staff')) not valid;
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'wash_transactions_direct_employee_pay_check'
+  ) then
+    alter table public.wash_transactions
+      add constraint wash_transactions_direct_employee_pay_check
+      check (direct_employee_pay is null or direct_employee_pay > 0) not valid;
   end if;
 
   if not exists (

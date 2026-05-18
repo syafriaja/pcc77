@@ -155,6 +155,33 @@ function calculatePayrollValue(
   return setting?.payroll_value || 0;
 }
 
+function getStoredTransactionPayExpense(transaction, settingsMap) {
+  if (hasDirectEmployeePay(transaction.direct_employee_pay)) {
+    return Number(transaction.direct_employee_pay);
+  }
+
+  if (!isFullWash(transaction)) return 0;
+
+  const payrollValue = hasStoredNumber(transaction.payroll_value)
+    ? Number(transaction.payroll_value)
+    : calculatePayrollValue(
+        transaction.vehicle_type,
+        transaction.vehicle_size || "sedang",
+        transaction.service_category || "fullwash",
+        settingsMap,
+      );
+  const bonusAmount = hasStoredNumber(transaction.bonus_amount)
+    ? Number(transaction.bonus_amount)
+    : calculateBonus(
+        transaction.vehicle_type,
+        transaction.vehicle_size || "sedang",
+        transaction.service_category || "fullwash",
+        settingsMap,
+      );
+
+  return payrollValue + bonusAmount;
+}
+
 function getTargetProgress(count, target) {
   if (!target) return 0;
   return Math.min(Math.round((count / target) * 100), 100);
@@ -164,6 +191,10 @@ function hasStoredNumber(value) {
   return (
     value !== null && value !== undefined && Number.isFinite(Number(value))
   );
+}
+
+function hasDirectEmployeePay(value) {
+  return hasStoredNumber(value) && Number(value) > 0;
 }
 
 // Menghasilkan tanggal hari ini versi Makassar dalam format YYYY-MM-DD.
@@ -363,6 +394,7 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
     vehicle_brand,
     employee_id,
     price,
+    direct_employee_pay,
   } = req.body;
 
   try {
@@ -379,6 +411,12 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
       typeof vehicle_brand === "string" ? vehicle_brand.trim() : "";
     const employeeId = Number(employee_id);
     const parsedPrice = Number(price);
+    const normalizedDirectEmployeePay =
+      direct_employee_pay === "" ||
+      direct_employee_pay === null ||
+      direct_employee_pay === undefined
+        ? null
+        : Number(direct_employee_pay);
 
     // Validasi ini menjaga data yang masuk tetap sesuai pilihan resmi di aplikasi.
     if (!["mobil", "motor"].includes(normalizedVehicleType)) {
@@ -426,6 +464,27 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
       return sendValidationError(res, "Harga harus lebih dari 0");
     }
 
+    if (
+      normalizedDirectEmployeePay !== null &&
+      (!Number.isFinite(normalizedDirectEmployeePay) ||
+        normalizedDirectEmployeePay <= 0)
+    ) {
+      return sendValidationError(
+        res,
+        "Gaji karyawan langsung harus lebih dari 0",
+      );
+    }
+
+    if (
+      normalizedServiceCategory === "non_target" &&
+      normalizedDirectEmployeePay === null
+    ) {
+      return sendValidationError(
+        res,
+        "Gaji karyawan langsung wajib diisi untuk Non Target",
+      );
+    }
+
     // Pastikan transaksi hanya memakai petugas yang benar-benar ada di tabel employees.
     const { data: employee, error: employeeError } = await supabase
       .from("employees")
@@ -467,6 +526,7 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
           price: parsedPrice,
           bonus_amount: bonusAmount,
           payroll_value: payrollValue,
+          direct_employee_pay: normalizedDirectEmployeePay,
           input_by: req.user.role,
         },
       ])
@@ -559,11 +619,19 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
 
   const { data: trxs } = await supabase
     .from("wash_transactions")
-    .select("price")
+    .select(
+      "vehicle_type, vehicle_size, service_category, price, bonus_amount, payroll_value, direct_employee_pay",
+    )
     .gte("created_at", start)
     .lte("created_at", end);
 
   const omset = trxs?.reduce((acc, curr) => acc + Number(curr.price), 0) || 0;
+  const compensationMap = await getCompensationMap();
+  const gajiKaryawan =
+    trxs?.reduce(
+      (acc, curr) => acc + getStoredTransactionPayExpense(curr, compensationMap),
+      0,
+    ) || 0;
 
   const { data: exps } = await supabase
     .from("operating_expenses")
@@ -574,7 +642,12 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
   const pengeluaran =
     exps?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
-  res.json({ omset, pengeluaran, profit: omset - pengeluaran });
+  res.json({
+    omset,
+    pengeluaran,
+    gajiKaryawan,
+    profit: omset - pengeluaran - gajiKaryawan,
+  });
 });
 
 app.post("/api/expenses", requireAuth, async (req, res) => {
@@ -782,7 +855,7 @@ app.get(
       const { data: transactions, error: transError } = await supabase
         .from("wash_transactions")
         .select(
-          "vehicle_type, vehicle_size, service_category, employee_id, price, bonus_amount, payroll_value",
+          "vehicle_type, vehicle_size, service_category, employee_id, price, bonus_amount, payroll_value, direct_employee_pay",
         )
         .gte("created_at", startDate)
         .lte("created_at", endDate);
@@ -806,6 +879,8 @@ app.get(
           (t) => t.vehicle_type.toLowerCase() === "motor",
         ).length;
         const payrollTotal = empTrans.reduce((sum, transaction) => {
+          if (hasDirectEmployeePay(transaction.direct_employee_pay)) return sum;
+
           const storedValue = Number(transaction.payroll_value);
           const fallbackValue = calculatePayrollValue(
             transaction.vehicle_type,
@@ -822,6 +897,8 @@ app.get(
           );
         }, 0);
         const bonusTotal = empTrans.reduce((sum, transaction) => {
+          if (hasDirectEmployeePay(transaction.direct_employee_pay)) return sum;
+
           const storedBonus = Number(transaction.bonus_amount);
           const fallbackBonus = calculateBonus(
             transaction.vehicle_type,
@@ -884,6 +961,14 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
 
     if (error) throw error;
 
+    const { data: operatingExpenses, error: expenseError } = await supabase
+      .from("operating_expenses")
+      .select("amount")
+      .gte("created_at", start)
+      .lte("created_at", end);
+
+    if (expenseError) throw expenseError;
+
     const compensationMap = await getCompensationMap();
 
     // Ringkasan dashboard: full wash untuk target/payroll,
@@ -894,6 +979,8 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
     const allMobil = data.filter((t) => t.vehicle_type === "mobil").length;
     const allMotor = data.filter((t) => t.vehicle_type === "motor").length;
     const payrollEstimate = fullWashData.reduce((sum, t) => {
+      if (hasDirectEmployeePay(t.direct_employee_pay)) return sum;
+
       const storedValue = Number(t.payroll_value);
       const fallbackValue = calculatePayrollValue(
         t.vehicle_type,
@@ -907,7 +994,9 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
       );
     }, 0);
     const bonusMobil = fullWashData
-      .filter((t) => t.vehicle_type === "mobil")
+      .filter(
+        (t) => t.vehicle_type === "mobil" && !hasDirectEmployeePay(t.direct_employee_pay),
+      )
       .reduce(
         (sum, t) =>
           sum +
@@ -922,7 +1011,9 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         0,
       );
     const bonusMotor = fullWashData
-      .filter((t) => t.vehicle_type === "motor")
+      .filter(
+        (t) => t.vehicle_type === "motor" && !hasDirectEmployeePay(t.direct_employee_pay),
+      )
       .reduce(
         (sum, t) =>
           sum +
@@ -937,6 +1028,18 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         0,
       );
     const dailyRevenue = data.reduce((sum, t) => sum + Number(t.price || 0), 0);
+    const operatingExpenseTotal =
+      operatingExpenses?.reduce(
+        (sum, expense) => sum + Number(expense.amount || 0),
+        0,
+      ) || 0;
+    const employeePayExpense = data.reduce(
+      (sum, transaction) =>
+        sum + getStoredTransactionPayExpense(transaction, compensationMap),
+      0,
+    );
+    const netRevenue =
+      dailyRevenue - operatingExpenseTotal - employeePayExpense;
     // Revenue detail di rekap tetap hanya dikirim ke owner.
     // Dashboard kasir memakai dailyRevenue untuk kartu pendapatan harian.
     const revenue =
@@ -979,6 +1082,9 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         mobilTargetPercent: getTargetProgress(mobil, TARGET_MAP.mobil),
         motorTargetPercent: getTargetProgress(motor, TARGET_MAP.motor),
         dailyRevenue,
+        operatingExpenseTotal,
+        employeePayExpense,
+        netRevenue,
         revenue,
         startTime,
         lastTime,
@@ -1013,6 +1119,10 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
               t.service_category || "fullwash",
               compensationMap,
             ),
+        direct_employee_pay: hasDirectEmployeePay(t.direct_employee_pay)
+          ? Number(t.direct_employee_pay)
+          : null,
+        employee_pay_expense: getStoredTransactionPayExpense(t, compensationMap),
         input_by: t.input_by || "staff",
       })),
     });

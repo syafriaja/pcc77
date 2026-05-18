@@ -305,6 +305,23 @@
               </div>
             </div>
 
+            <div>
+              <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
+                Gaji karyawan langsung
+              </label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="directEmployeePay"
+                oninput="formatPrice(this)"
+                placeholder="Kosongkan jika ikut sistem"
+                class="w-full rounded-2xl bg-slate-50 p-4 font-bold outline-amber-500"
+              />
+              <p id="directEmployeePayHelp" class="mt-2 text-xs font-bold leading-5 text-slate-400">
+                Untuk Full Wash boleh dikosongkan jika gaji masuk payroll sistem.
+              </p>
+            </div>
+
             <button
               type="submit"
               id="submitBtn"
@@ -431,6 +448,18 @@
       function selectService(service) {
         // Full Wash masuk payroll dan target. Non Target dibayar langsung.
         document.getElementById("serviceCategory").value = service;
+        const payInput = document.getElementById("directEmployeePay");
+        const payHelp = document.getElementById("directEmployeePayHelp");
+
+        payInput.required = service === "non_target";
+        payInput.placeholder =
+          service === "non_target"
+            ? "Wajib isi untuk Non Target"
+            : "Kosongkan jika ikut sistem";
+        payHelp.innerText =
+          service === "non_target"
+            ? "Non Target dibayar langsung, jadi nominal gaji karyawan wajib diisi."
+            : "Untuk Full Wash boleh dikosongkan jika gaji masuk payroll sistem.";
         setActive(["btnFullwash", "btnNonTarget"], service === "fullwash" ? "btnFullwash" : "btnNonTarget");
       }
 
@@ -444,6 +473,7 @@
           vehicle_brand: document.getElementById("vehicleBrand").value,
           employee_id: document.getElementById("employeeId").value,
           price: document.getElementById("washPrice").value.replace(/[^0-9]/g, ""),
+          direct_employee_pay: document.getElementById("directEmployeePay").value.replace(/[^0-9]/g, ""),
         };
 
         if (!payload.vehicle_type) return alert("Silakan pilih jenis kendaraan.");

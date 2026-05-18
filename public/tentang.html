@@ -64,7 +64,9 @@
           <h2 class="text-xl font-black">Panduan Kasir</h2>
           <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
             Kasir fokus pada input kendaraan, memilih kategori layanan, dan
-            mengubah status kendaraan sesuai proses kerja.
+            mengubah status kendaraan sesuai proses kerja. Jika ada uang keluar
+            untuk pengeluaran toko atau gaji karyawan langsung, catat di form
+            yang tersedia agar pendapatan bersih harian akurat.
           </p>
         </section>
 
@@ -76,6 +78,7 @@
               <li>Pilih ukuran kendaraan.</li>
               <li>Pilih kategori layanan.</li>
               <li>Isi merek kendaraan, petugas, dan harga wash.</li>
+              <li>Isi gaji karyawan langsung hanya jika uangnya dibayar saat itu juga.</li>
             </ul>
           </div>
 
@@ -84,7 +87,8 @@
             <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
               Pilih <strong>Full Wash</strong> untuk cuci reguler. Pilih
               <strong> Non Target</strong> untuk body/samping, interior/dalam,
-              custom, atau truk.
+              custom, atau truk. Non Target wajib mengisi gaji karyawan
+              langsung karena uang hasil kerjanya langsung diberikan.
             </p>
           </div>
         </section>
@@ -99,12 +103,23 @@
           </div>
 
           <div class="soft-card rounded-[2rem] bg-rose-50 p-6">
-            <h3 class="text-lg font-black">Catatan Non Target</h3>
+            <h3 class="text-lg font-black">Gaji Langsung</h3>
             <p class="mt-3 text-sm font-bold leading-7 text-rose-700">
-              Non Target dibayar langsung dan tidak masuk payroll, target, atau
-              slip gaji. Pastikan kategorinya benar saat input.
+              Untuk Full Wash, kolom gaji langsung boleh dikosongkan jika
+              karyawan ikut sistem payroll. Kalau kolom itu diisi, sistem
+              menganggap gaji transaksi tersebut sudah dibayar langsung dan
+              tidak dihitung lagi di payroll bulanan.
             </p>
           </div>
+        </section>
+
+        <section class="soft-card rounded-[2rem] p-6">
+          <h3 class="text-lg font-black">Pendapatan Bersih Harian</h3>
+          <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+            Pendapatan bersih adalah uang masuk dari transaksi wash setelah
+            dikurangi pengeluaran toko dan gaji karyawan. Rumus sederhananya:
+            pendapatan kotor - pengeluaran harian - gaji karyawan.
+          </p>
         </section>
       </main>
 
@@ -114,7 +129,8 @@
           <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
             Pcc. S77 memisahkan transaksi menjadi <strong>Full Wash</strong> dan
             <strong> Non Target</strong>. Full Wash masuk payroll, target, dan
-            slip gaji. Non Target dibayar langsung dan tidak masuk payroll.
+            slip gaji jika gaji langsung tidak diisi. Non Target dibayar
+            langsung dan tidak masuk payroll.
           </p>
         </section>
 
@@ -125,8 +141,9 @@
             </p>
             <h2 class="mt-2 text-xl font-black">Masuk payroll dan target</h2>
             <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
-              Setiap transaksi full wash menyimpan nilai upah payroll dan bonus
-              harian sesuai aturan yang aktif saat transaksi dibuat.
+              Jika kolom gaji langsung dikosongkan, transaksi Full Wash memakai
+              nilai payroll dan bonus harian dari aturan sistem. Nilai ini masuk
+              beban gaji harian dan juga masuk rekap payroll bulanan.
             </p>
           </div>
 
@@ -137,9 +154,42 @@
             <h2 class="mt-2 text-xl font-black">Dibayar langsung</h2>
             <p class="mt-3 text-sm font-bold leading-7 text-rose-700">
               Body/samping, interior/dalam, custom, atau truk tetap tercatat di
-              rekap, tetapi tidak masuk target, payroll, atau slip gaji.
+              rekap, tetapi tidak masuk target, payroll, atau slip gaji. Saat
+              input Non Target, gaji karyawan langsung wajib diisi.
             </p>
           </div>
+        </section>
+
+        <section class="soft-card rounded-[2rem] p-6">
+          <h2 class="text-xl font-black">Cara Sistem Menghitung Gaji</h2>
+          <div class="mt-5 grid gap-4 md:grid-cols-3">
+            <div class="rounded-3xl bg-slate-50 p-5">
+              <h3 class="text-base font-black">Full Wash sistem</h3>
+              <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+                Kolom gaji langsung kosong. Sistem memakai upah payroll dan
+                bonus harian sebagai beban gaji.
+              </p>
+            </div>
+            <div class="rounded-3xl bg-amber-50 p-5">
+              <h3 class="text-base font-black">Full Wash langsung</h3>
+              <p class="mt-3 text-sm font-bold leading-7 text-slate-600">
+                Kolom gaji langsung diisi. Angka itu menjadi beban gaji dan
+                transaksi tidak dihitung lagi di payroll bulanan.
+              </p>
+            </div>
+            <div class="rounded-3xl bg-rose-50 p-5">
+              <h3 class="text-base font-black">Non Target</h3>
+              <p class="mt-3 text-sm font-bold leading-7 text-rose-700">
+                Gaji langsung wajib diisi karena karyawan menerima uangnya
+                langsung dari transaksi tersebut.
+              </p>
+            </div>
+          </div>
+          <p class="mt-5 rounded-2xl bg-emerald-50 p-4 text-sm font-bold leading-7 text-emerald-800">
+            Pendapatan bersih harian dihitung dari pendapatan kotor dikurangi
+            pengeluaran harian dan semua beban gaji karyawan, baik yang dibayar
+            langsung maupun yang ikut sistem.
+          </p>
         </section>
 
         <section class="soft-card rounded-[2rem] p-6">
@@ -174,6 +224,8 @@
             Owner bisa mengubah nominal dari halaman Payroll. Perubahan langsung
             berlaku untuk transaksi baru setelah disimpan. Transaksi lama tidak
             ikut berubah karena nilainya sudah tersimpan saat transaksi dibuat.
+            Jika gaji langsung diisi saat input transaksi, nilai payroll sistem
+            tidak dipakai untuk transaksi tersebut.
           </p>
         </section>
 

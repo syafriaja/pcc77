@@ -65,8 +65,12 @@
           <p class="text-xs font-black uppercase tracking-widest text-rose-100">Pengeluaran</p>
           <h2 id="statExpense" class="mt-3 text-2xl font-black">Rp 0</h2>
         </div>
-        <div id="profitStatCard" class="hidden rounded-3xl bg-emerald-600 p-5 text-white shadow-xl">
-          <p class="text-xs font-black uppercase tracking-widest text-emerald-100">Profit Bersih</p>
+        <div class="rounded-3xl bg-amber-500 p-5 text-slate-950 shadow-xl">
+          <p class="text-xs font-black uppercase tracking-widest text-amber-900">Gaji Karyawan</p>
+          <h2 id="statEmployeePay" class="mt-3 text-2xl font-black">Rp 0</h2>
+        </div>
+        <div id="profitStatCard" class="rounded-3xl bg-emerald-600 p-5 text-white shadow-xl">
+          <p class="text-xs font-black uppercase tracking-widest text-emerald-100">Pendapatan Bersih</p>
           <h2 id="statProfit" class="mt-3 text-2xl font-black">Rp 0</h2>
         </div>
         <div class="soft-card rounded-3xl p-5">
@@ -100,7 +104,7 @@
           </div>
           <div class="soft-card overflow-hidden rounded-[2rem]">
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[920px] text-left">
+              <table class="w-full min-w-[1040px] text-left">
                 <thead class="border-b border-slate-100 bg-slate-50">
                   <tr>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Waktu</th>
@@ -108,6 +112,7 @@
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kategori</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Petugas</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Harga</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Gaji</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
                   </tr>
                 </thead>
@@ -121,7 +126,7 @@
           <h2 class="mb-4 text-lg font-black uppercase">Kendaraan Selesai</h2>
           <div class="soft-card overflow-hidden rounded-[2rem]">
             <div class="overflow-x-auto">
-              <table class="w-full min-w-[920px] text-left">
+              <table class="w-full min-w-[1040px] text-left">
                 <thead class="border-b border-slate-100 bg-slate-50">
                   <tr>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Waktu</th>
@@ -129,6 +134,7 @@
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Kategori</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Petugas</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Harga</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Gaji</th>
                     <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Status</th>
                   </tr>
                 </thead>
@@ -178,7 +184,6 @@
         }).format(n || 0);
       let categoryFilter = "all";
       let dailyTransactions = [];
-      let dailyExpenseTotal = 0;
 
       if (!user || !token) {
         window.location.href = "/login.html";
@@ -216,7 +221,6 @@
         document.getElementById("dateFilterArea").classList.remove("hidden");
         document.getElementById("revenueStatCard").classList.remove("hidden");
         document.getElementById("expenseStatCard").classList.remove("hidden");
-        document.getElementById("profitStatCard").classList.remove("hidden");
         document.getElementById("expenseSection").classList.remove("hidden");
       }
 
@@ -228,6 +232,16 @@
               <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-700">Non Target</span>
               <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600">Dibayar Langsung</span>
               <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">Tidak Masuk Payroll</span>
+            </div>
+          `;
+        }
+
+        if (transaction.direct_employee_pay) {
+          return `
+            <div class="flex flex-wrap gap-2">
+              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">Full Wash</span>
+              <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-black text-rose-600">Gaji Langsung</span>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">Tidak Masuk Payroll Bulanan</span>
             </div>
           `;
         }
@@ -267,6 +281,7 @@
         const isNonTarget = transaction.service_category === "non_target";
         const rowClass = isNonTarget ? "bg-rose-50/70 hover:bg-rose-50" : "hover:bg-slate-50";
         const vehicleLabel = `${transaction.vehicle_type || "-"} ${transaction.vehicle_size || ""}`.trim();
+        const payLabel = transaction.direct_employee_pay ? "Langsung" : "Sistem";
 
         return `
           <tr class="${rowClass} transition">
@@ -278,13 +293,17 @@
             <td class="p-5">${categoryBadges(transaction)}</td>
             <td class="p-5 text-sm font-bold text-slate-600">${transaction.employee_name}</td>
             <td class="p-5 text-sm font-black text-slate-900">${formatIDR(transaction.price)}</td>
+            <td class="p-5">
+              <p class="text-sm font-black text-slate-900">${formatIDR(transaction.employee_pay_expense)}</p>
+              <p class="mt-1 text-xs font-black uppercase text-slate-400">${payLabel}</p>
+            </td>
             <td class="p-5">${statusControl(transaction)}</td>
           </tr>
         `;
       }
 
       function emptyRow(message) {
-        return `<tr><td colspan="6" class="p-16 text-center text-sm font-bold text-slate-400">${message}</td></tr>`;
+        return `<tr><td colspan="7" class="p-16 text-center text-sm font-bold text-slate-400">${message}</td></tr>`;
       }
 
       function emptyExpenseRow(message) {
@@ -345,11 +364,6 @@
         });
 
         try {
-          if (user.role === "owner") {
-            dailyExpenseTotal = 0;
-            document.getElementById("statExpense").innerText = formatIDR(0);
-          }
-
           const res = await fetch(`/api/rekap-harian?date=${date}`, {
             headers: authHeaders(),
           });
@@ -370,21 +384,21 @@
           document.getElementById("statHours").innerText = `${summary.startTime || "--:--"} - ${summary.lastTime || "--:--"}`;
           document.getElementById("statNonTarget").innerText = formatIDR(nonTargetTotal);
           document.getElementById("statNonTargetCount").innerText = `${nonTargetTransactions.length} transaksi`;
+          document.getElementById("statEmployeePay").innerText = formatIDR(summary.employeePayExpense);
+          document.getElementById("statProfit").innerText = formatIDR(summary.netRevenue);
           if (user.role === "owner") {
             document.getElementById("statRevenue").innerText = formatIDR(summary.revenue);
-            document.getElementById("statProfit").innerText = formatIDR(
-              Number(summary.revenue || 0) - dailyExpenseTotal,
-            );
+            document.getElementById("statExpense").innerText = formatIDR(summary.operatingExpenseTotal);
           }
 
           renderTransactionTables();
-          if (user.role === "owner") await loadExpenses(date, summary.revenue || 0);
+          if (user.role === "owner") await loadExpenses(date);
         } catch (error) {
           console.error("Gagal memuat rekap", error);
         }
       }
 
-      async function loadExpenses(date, revenue) {
+      async function loadExpenses(date) {
         const tbody = document.getElementById("expenseTableBody");
 
         try {
@@ -399,11 +413,7 @@
             return;
           }
 
-          dailyExpenseTotal = Number(data.total || 0);
-          document.getElementById("statExpense").innerText = formatIDR(dailyExpenseTotal);
-          document.getElementById("statProfit").innerText = formatIDR(
-            Number(revenue || 0) - dailyExpenseTotal,
-          );
+          document.getElementById("statExpense").innerText = formatIDR(data.total);
 
           tbody.innerHTML = data.expenses?.length
             ? data.expenses
