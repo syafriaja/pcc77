@@ -1,0 +1,145 @@
+:root {
+  --brand: #d49a13;
+  --brand-dark: #8a5a12;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #dbe3ea;
+  --panel: #ffffff;
+  --canvas: #f4f7fa;
+  --danger: #dc2626;
+  --success: #059669;
+}
+
+* {
+  letter-spacing: 0;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(244, 247, 250, 0.96)),
+    var(--canvas) !important;
+  color: var(--ink);
+}
+
+.soft-card {
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--panel) !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.055) !important;
+}
+
+.rounded-2xl,
+.rounded-3xl,
+.rounded-\[2rem\],
+.rounded-\[3rem\] {
+  border-radius: 8px !important;
+}
+
+.rounded-full {
+  border-radius: 999px !important;
+}
+
+.choice-active {
+  border-color: var(--brand) !important;
+  background: #fff8e1 !important;
+  box-shadow: inset 0 0 0 1px rgba(212, 154, 19, 0.2) !important;
+}
+
+header {
+  border-bottom: 1px solid rgba(219, 227, 234, 0.9);
+  padding-bottom: 1.25rem;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid transparent;
+  border-radius: 8px !important;
+  background: #f8fafc !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(212, 154, 19, 0.85);
+  background: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(212, 154, 19, 0.13);
+  outline: none;
+}
+
+button,
+a[class*="bg-"],
+a[class*="border"] {
+  border-radius: 8px !important;
+}
+
+button {
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+button:hover:not(:disabled),
+a[class*="bg-"]:hover,
+a[class*="border"]:hover {
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  background: #f8fafc;
+  color: #475569 !important;
+  white-space: nowrap;
+}
+
+tbody tr {
+  transition: background-color 140ms ease;
+}
+
+tbody td {
+  vertical-align: top;
+}
+
+.brand-mark {
+  filter: none !important;
+}
+
+#toast {
+  border-radius: 8px !important;
+}
+
+@media (max-width: 640px) {
+  .mx-auto {
+    width: 100%;
+  }
+
+  header {
+    padding-right: 0 !important;
+  }
+
+  table th,
+  table td {
+    padding: 0.9rem !important;
+  }
+
+  .fixed.right-4.top-4 {
+    position: static !important;
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}

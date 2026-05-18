@@ -9,6 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;800&display=swap"
       rel="stylesheet"
     />
+    <link href="/css/app.css" rel="stylesheet" />
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -31,20 +32,20 @@
       }
     </style>
   </head>
-  <body class="bg-slate-900 flex items-center justify-center min-h-screen p-6">
-    <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md">
+  <body class="flex min-h-screen items-center justify-center p-6">
+    <div class="soft-card w-full max-w-md p-8 md:p-10">
       <div class="text-center mb-10">
         <h1 class="text-4xl font-black text-slate-900">
           <span class="brand-mark">PCC. S77</span>
         </h1>
-        <p class="text-slate-400 font-bold mt-2">Masuk ke Dashboard Sistem</p>
+        <p class="text-slate-500 font-bold mt-3">Masuk ke dashboard operasional</p>
       </div>
       <form id="loginForm" class="space-y-4">
         <input
           type="text"
           id="user"
           placeholder="Username"
-          class="w-full p-4 bg-slate-100 rounded-2xl font-bold border-none outline-indigo-500"
+          class="w-full p-4 font-bold"
           required
         />
         <!-- Input password dibuat relative agar tombol ikon show/hide bisa ditempatkan di kanan input. -->
@@ -53,7 +54,7 @@
             type="password"
             id="pass"
             placeholder="Password"
-            class="w-full p-4 pr-16 bg-slate-100 rounded-2xl font-bold border-none outline-indigo-500"
+            class="w-full p-4 pr-16 font-bold"
             required
           />
           <button
@@ -91,7 +92,7 @@
         ></p>
         <button
           type="submit"
-          class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition-all"
+          class="w-full bg-slate-900 text-white font-black py-4 hover:bg-slate-800 shadow-lg shadow-slate-200 transition-all"
         >
           MASUK SEKARANG
         </button>
