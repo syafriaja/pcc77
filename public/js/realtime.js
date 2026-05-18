@@ -19,6 +19,18 @@ const channel = supabaseClient
       window.dispatchEvent(new Event("refresh-data"));
     },
   )
+  .on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "operating_expenses",
+    },
+    (payload) => {
+      console.log("Expense realtime update:", payload);
+      window.dispatchEvent(new Event("refresh-data"));
+    },
+  )
   .subscribe((status) => {
     console.log("STATUS", status);
   });

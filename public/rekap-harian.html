@@ -44,7 +44,7 @@
         </div>
       </header>
 
-      <section class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <section class="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <div class="soft-card rounded-3xl p-5">
           <p class="text-xs font-black uppercase tracking-widest text-slate-400">Full Wash</p>
           <h2 id="statFullwash" class="mt-3 text-3xl font-black">0</h2>
@@ -61,11 +61,20 @@
           <p class="text-xs font-black uppercase tracking-widest text-slate-400">Pendapatan</p>
           <h2 id="statRevenue" class="mt-3 text-2xl font-black">Rp 0</h2>
         </div>
+        <div id="expenseStatCard" class="hidden rounded-3xl bg-rose-600 p-5 text-white shadow-xl">
+          <p class="text-xs font-black uppercase tracking-widest text-rose-100">Pengeluaran</p>
+          <h2 id="statExpense" class="mt-3 text-2xl font-black">Rp 0</h2>
+        </div>
+        <div id="profitStatCard" class="hidden rounded-3xl bg-emerald-600 p-5 text-white shadow-xl">
+          <p class="text-xs font-black uppercase tracking-widest text-emerald-100">Profit Bersih</p>
+          <h2 id="statProfit" class="mt-3 text-2xl font-black">Rp 0</h2>
+        </div>
         <div class="soft-card rounded-3xl p-5">
           <p class="text-xs font-black uppercase tracking-widest text-slate-400">Non Target</p>
           <h2 id="statNonTarget" class="mt-3 text-2xl font-black text-rose-600">Rp 0</h2>
           <p id="statNonTargetCount" class="mt-1 text-xs font-bold text-slate-400">0 transaksi</p>
         </div>
+
       </section>
 
       <section class="space-y-8">
@@ -128,6 +137,31 @@
             </div>
           </div>
         </div>
+
+        <div id="expenseSection" class="hidden">
+          <h2 class="mb-4 text-lg font-black uppercase">Pengeluaran Harian</h2>
+          <div class="soft-card overflow-hidden rounded-[2rem]">
+            <div class="overflow-x-auto">
+              <table class="w-full min-w-[720px] text-left">
+                <thead class="border-b border-slate-100 bg-slate-50">
+                  <tr>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Waktu</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Keterangan</th>
+                    <th class="p-5 text-xs font-black uppercase tracking-widest text-slate-400">Dicatat oleh</th>
+                    <th class="p-5 text-right text-xs font-black uppercase tracking-widest text-slate-400">Nominal</th>
+                  </tr>
+                </thead>
+                <tbody id="expenseTableBody" class="divide-y divide-slate-50">
+                  <tr>
+                    <td colspan="4" class="p-16 text-center text-sm font-bold text-slate-400">
+                      Memuat pengeluaran...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
 
@@ -144,6 +178,7 @@
         }).format(n || 0);
       let categoryFilter = "all";
       let dailyTransactions = [];
+      let dailyExpenseTotal = 0;
 
       if (!user || !token) {
         window.location.href = "/login.html";
@@ -163,6 +198,15 @@
         }
       }
 
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
       const today = new Intl.DateTimeFormat("en-CA", {
         timeZone: "Asia/Makassar",
       }).format(new Date());
@@ -171,6 +215,9 @@
       if (user.role === "owner") {
         document.getElementById("dateFilterArea").classList.remove("hidden");
         document.getElementById("revenueStatCard").classList.remove("hidden");
+        document.getElementById("expenseStatCard").classList.remove("hidden");
+        document.getElementById("profitStatCard").classList.remove("hidden");
+        document.getElementById("expenseSection").classList.remove("hidden");
       }
 
       function categoryBadges(transaction) {
@@ -240,6 +287,10 @@
         return `<tr><td colspan="6" class="p-16 text-center text-sm font-bold text-slate-400">${message}</td></tr>`;
       }
 
+      function emptyExpenseRow(message) {
+        return `<tr><td colspan="4" class="p-16 text-center text-sm font-bold text-slate-400">${message}</td></tr>`;
+      }
+
       function updateFilterButtons() {
         // Menandai tombol filter yang sedang aktif agar mudah dilihat.
         document.querySelectorAll(".filter-btn").forEach((button) => {
@@ -294,6 +345,11 @@
         });
 
         try {
+          if (user.role === "owner") {
+            dailyExpenseTotal = 0;
+            document.getElementById("statExpense").innerText = formatIDR(0);
+          }
+
           const res = await fetch(`/api/rekap-harian?date=${date}`, {
             headers: authHeaders(),
           });
@@ -314,11 +370,60 @@
           document.getElementById("statHours").innerText = `${summary.startTime || "--:--"} - ${summary.lastTime || "--:--"}`;
           document.getElementById("statNonTarget").innerText = formatIDR(nonTargetTotal);
           document.getElementById("statNonTargetCount").innerText = `${nonTargetTransactions.length} transaksi`;
-          if (user.role === "owner") document.getElementById("statRevenue").innerText = formatIDR(summary.revenue);
+          if (user.role === "owner") {
+            document.getElementById("statRevenue").innerText = formatIDR(summary.revenue);
+            document.getElementById("statProfit").innerText = formatIDR(
+              Number(summary.revenue || 0) - dailyExpenseTotal,
+            );
+          }
 
           renderTransactionTables();
+          if (user.role === "owner") await loadExpenses(date, summary.revenue || 0);
         } catch (error) {
           console.error("Gagal memuat rekap", error);
+        }
+      }
+
+      async function loadExpenses(date, revenue) {
+        const tbody = document.getElementById("expenseTableBody");
+
+        try {
+          const res = await fetch(`/api/admin/expenses?date=${date}`, {
+            headers: authHeaders(),
+          });
+          handleAuthExpired(res);
+          const data = await res.json();
+
+          if (!data.success) {
+            tbody.innerHTML = emptyExpenseRow(data.message || "Gagal memuat pengeluaran.");
+            return;
+          }
+
+          dailyExpenseTotal = Number(data.total || 0);
+          document.getElementById("statExpense").innerText = formatIDR(dailyExpenseTotal);
+          document.getElementById("statProfit").innerText = formatIDR(
+            Number(revenue || 0) - dailyExpenseTotal,
+          );
+
+          tbody.innerHTML = data.expenses?.length
+            ? data.expenses
+                .map(
+                  (expense) => `
+                    <tr class="transition hover:bg-slate-50">
+                      <td class="p-5 font-black text-slate-900">${expense.time}</td>
+                      <td class="p-5 text-sm font-bold text-slate-700">${escapeHtml(expense.description)}</td>
+                      <td class="p-5">
+                        <p class="text-sm font-black text-slate-900">${escapeHtml(expense.input_username)}</p>
+                        <p class="mt-1 text-xs font-black uppercase text-slate-400">${escapeHtml(expense.input_by)}</p>
+                      </td>
+                      <td class="p-5 text-right text-sm font-black text-rose-600">${formatIDR(expense.amount)}</td>
+                    </tr>
+                  `,
+                )
+                .join("")
+            : emptyExpenseRow("Belum ada pengeluaran pada tanggal ini.");
+        } catch (error) {
+          tbody.innerHTML = emptyExpenseRow("Gagal memuat pengeluaran.");
         }
       }
 

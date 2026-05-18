@@ -558,7 +558,7 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
   console.log("today", today, "start", start, "end", end);
 
   const { data: trxs } = await supabase
-    .from("transactions")
+    .from("wash_transactions")
     .select("price")
     .gte("created_at", start)
     .lte("created_at", end);
@@ -577,7 +577,7 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
   res.json({ omset, pengeluaran, profit: omset - pengeluaran });
 });
 
-app.post("/api/expenses", requireAuth, requireOwner, async (req, res) => {
+app.post("/api/expenses", requireAuth, async (req, res) => {
   const { description, amount } = req.body;
 
   // Validasi pengeluaran mencegah nominal kosong/aneh masuk ke laporan operasional.
@@ -598,7 +598,14 @@ app.post("/api/expenses", requireAuth, requireOwner, async (req, res) => {
 
   const { error } = await supabase
     .from("operating_expenses")
-    .insert([{ description: normalizedDescription, amount: parsedAmount }]);
+    .insert([
+      {
+        description: normalizedDescription,
+        amount: parsedAmount,
+        input_by: req.user.role,
+        input_username: req.user.username,
+      },
+    ]);
 
   if (error) {
     console.error("Insert Expense Error:", error.message);
@@ -606,6 +613,50 @@ app.post("/api/expenses", requireAuth, requireOwner, async (req, res) => {
   }
 
   res.json({ success: true });
+});
+
+app.get("/api/admin/expenses", requireAuth, requireOwner, async (req, res) => {
+  const date =
+    typeof req.query.date === "string" && req.query.date
+      ? req.query.date
+      : getMakassarDateString();
+  const { start, end } = getMakassarDayRange(date);
+
+  try {
+    const { data, error } = await supabase
+      .from("operating_expenses")
+      .select("id, description, amount, input_by, input_username, created_at")
+      .gte("created_at", start)
+      .lte("created_at", end)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const expenses = (data || []).map((expense) => ({
+      id: expense.id,
+      description: expense.description,
+      amount: Number(expense.amount || 0),
+      input_by: expense.input_by || "staff",
+      input_username: expense.input_username || "-",
+      time: new Date(expense.created_at).toLocaleTimeString("id-ID", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: APP_TIMEZONE,
+      }),
+    }));
+
+    res.json({
+      success: true,
+      total: expenses.reduce((sum, expense) => sum + expense.amount, 0),
+      expenses,
+    });
+  } catch (error) {
+    console.error("Load Expenses Error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Gagal memuat pengeluaran",
+    });
+  }
 });
 
 app.get(
@@ -885,11 +936,11 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
               )),
         0,
       );
-    // Revenue hanya dikirim ke owner; staf tetap bisa melihat rekap kendaraan tanpa omzet.
+    const dailyRevenue = data.reduce((sum, t) => sum + Number(t.price || 0), 0);
+    // Revenue detail di rekap tetap hanya dikirim ke owner.
+    // Dashboard kasir memakai dailyRevenue untuk kartu pendapatan harian.
     const revenue =
-      req.user.role === "owner"
-        ? data.reduce((sum, t) => sum + Number(t.price || 0), 0)
-        : null;
+      req.user.role === "owner" ? dailyRevenue : null;
 
     const startTime =
       data.length > 0
@@ -927,6 +978,7 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         motorTarget: TARGET_MAP.motor,
         mobilTargetPercent: getTargetProgress(mobil, TARGET_MAP.mobil),
         motorTargetPercent: getTargetProgress(motor, TARGET_MAP.motor),
+        dailyRevenue,
         revenue,
         startTime,
         lastTime,
