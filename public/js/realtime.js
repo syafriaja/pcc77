@@ -28,6 +28,7 @@ const channel = supabaseClient
     },
     (payload) => {
       console.log("Expense realtime update:", payload);
+      // Saat kasir mencatat pengeluaran, halaman owner/kasir yang sedang terbuka ikut refresh.
       window.dispatchEvent(new Event("refresh-data"));
     },
   )

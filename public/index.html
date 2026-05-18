@@ -9,6 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <!-- Style global bersama dipakai agar semua halaman punya tampilan yang konsisten. -->
     <link href="/css/app.css" rel="stylesheet" />
     <style>
       body {
@@ -307,6 +308,7 @@
             </div>
 
             <div>
+              <!-- Kolom ini opsional untuk Full Wash, tetapi wajib saat Non Target. -->
               <label class="mb-2 block text-xs font-black uppercase tracking-widest text-slate-400">
                 Gaji karyawan langsung
               </label>
@@ -452,6 +454,8 @@
         const payInput = document.getElementById("directEmployeePay");
         const payHelp = document.getElementById("directEmployeePayHelp");
 
+        // Non Target selalu dibayar langsung, jadi browser ikut mewajibkan input gaji.
+        // Backend tetap melakukan validasi ulang agar data aman walaupun request dikirim manual.
         payInput.required = service === "non_target";
         payInput.placeholder =
           service === "non_target"
@@ -564,6 +568,7 @@
           document.getElementById("totalFullwash").innerText = summary.fullwash || 0;
           document.getElementById("totalMobil").innerText = summary.mobil || 0;
           document.getElementById("totalMotor").innerText = summary.motor || 0;
+          // Pendapatan harian adalah omzet kotor dari transaksi wash hari ini.
           document.getElementById("dailyRevenue").innerText = formatIDR(summary.dailyRevenue);
           document.getElementById("bonusMobil").innerText = formatIDR(summary.bonusMobil);
           document.getElementById("bonusMotor").innerText = formatIDR(summary.bonusMotor);

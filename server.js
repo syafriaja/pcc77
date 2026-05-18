@@ -156,6 +156,8 @@ function calculatePayrollValue(
 }
 
 function getStoredTransactionPayExpense(transaction, settingsMap) {
+  // Jika kasir mengisi gaji langsung, angka itu menjadi beban gaji transaksi.
+  // Kalau kosong dan Full Wash, beban gaji dihitung dari payroll + bonus sistem.
   if (hasDirectEmployeePay(transaction.direct_employee_pay)) {
     return Number(transaction.direct_employee_pay);
   }
@@ -194,6 +196,7 @@ function hasStoredNumber(value) {
 }
 
 function hasDirectEmployeePay(value) {
+  // Nilai 0 dianggap tidak diisi, karena gaji langsung harus lebih dari 0.
   return hasStoredNumber(value) && Number(value) > 0;
 }
 
@@ -259,6 +262,8 @@ function signTokenPayload(encodedPayload) {
 
 // Token berlaku sampai akhir hari Makassar agar sesi kasir mengikuti hari operasional.
 function createAuthToken(user) {
+  // Token tidak disimpan di database, jadi akun yang sama bisa login dari beberapa perangkat.
+  // Masa aktifnya sampai akhir hari operasional Makassar.
   const today = getMakassarDateString();
   const { end } = getMakassarDayRange(today);
   const payload = {
@@ -479,6 +484,7 @@ app.post("/api/transactions", requireAuth, async (req, res) => {
       normalizedServiceCategory === "non_target" &&
       normalizedDirectEmployeePay === null
     ) {
+      // Non Target wajib mencatat gaji langsung karena tidak masuk payroll bulanan.
       return sendValidationError(
         res,
         "Gaji karyawan langsung wajib diisi untuk Non Target",
@@ -627,11 +633,11 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
 
   const omset = trxs?.reduce((acc, curr) => acc + Number(curr.price), 0) || 0;
   const compensationMap = await getCompensationMap();
-  const gajiKaryawan =
-    trxs?.reduce(
-      (acc, curr) => acc + getStoredTransactionPayExpense(curr, compensationMap),
-      0,
-    ) || 0;
+    const gajiKaryawan =
+      trxs?.reduce(
+        (acc, curr) => acc + getStoredTransactionPayExpense(curr, compensationMap),
+        0,
+      ) || 0;
 
   const { data: exps } = await supabase
     .from("operating_expenses")
@@ -642,6 +648,7 @@ app.get("/api/daily-summary", requireAuth, requireOwner, async (req, res) => {
   const pengeluaran =
     exps?.reduce((acc, curr) => acc + Number(curr.amount), 0) || 0;
 
+  // Profit bersih owner memperhitungkan pengeluaran operasional dan beban gaji.
   res.json({
     omset,
     pengeluaran,
@@ -879,6 +886,7 @@ app.get(
           (t) => t.vehicle_type.toLowerCase() === "motor",
         ).length;
         const payrollTotal = empTrans.reduce((sum, transaction) => {
+          // Full Wash yang sudah dibayar langsung tidak dihitung lagi ke payroll bulanan.
           if (hasDirectEmployeePay(transaction.direct_employee_pay)) return sum;
 
           const storedValue = Number(transaction.payroll_value);
@@ -897,6 +905,7 @@ app.get(
           );
         }, 0);
         const bonusTotal = empTrans.reduce((sum, transaction) => {
+          // Bonus juga dilewati agar gaji langsung tidak dobel dihitung.
           if (hasDirectEmployeePay(transaction.direct_employee_pay)) return sum;
 
           const storedBonus = Number(transaction.bonus_amount);
@@ -1038,6 +1047,7 @@ app.get("/api/rekap-harian", requireAuth, async (req, res) => {
         sum + getStoredTransactionPayExpense(transaction, compensationMap),
       0,
     );
+    // Pendapatan bersih dipakai di rekap harian kasir dan owner.
     const netRevenue =
       dailyRevenue - operatingExpenseTotal - employeePayExpense;
     // Revenue detail di rekap tetap hanya dikirim ke owner.

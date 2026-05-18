@@ -1,4 +1,5 @@
 :root {
+  /* Variabel warna utama supaya perubahan tema bisa dilakukan dari satu tempat. */
   --brand: #d49a13;
   --brand-dark: #8a5a12;
   --ink: #0f172a;
@@ -23,10 +24,31 @@ body {
 }
 
 .soft-card {
+  /* Kartu utama dibuat seragam di semua halaman, menggantikan radius/shadow bawaan lama. */
   border: 1px solid var(--line) !important;
   border-radius: 8px !important;
   background: var(--panel) !important;
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.055) !important;
+}
+
+.soft-card.bg-slate-900,
+.soft-card.bg-rose-600,
+.soft-card.bg-emerald-600 {
+  /* Kartu berwarna perlu tetap memakai warna aslinya, bukan dipaksa putih oleh .soft-card. */
+  border-color: transparent !important;
+  background: inherit !important;
+}
+
+.soft-card.bg-slate-900 {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+
+.soft-card.bg-slate-900 h1,
+.soft-card.bg-slate-900 h2,
+.soft-card.bg-slate-900 h3,
+.soft-card.bg-slate-900 p {
+  color: inherit !important;
 }
 
 .rounded-2xl,
@@ -66,6 +88,7 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
+  /* Fokus input dibuat jelas agar mudah dipakai di laptop maupun HP. */
   border-color: rgba(212, 154, 19, 0.85);
   background: #ffffff !important;
   box-shadow: 0 0 0 4px rgba(212, 154, 19, 0.13);

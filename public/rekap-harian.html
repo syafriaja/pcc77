@@ -9,6 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <!-- Style global bersama menjaga tampilan dashboard, rekap, payroll, dan login tetap seragam. -->
     <link href="/css/app.css" rel="stylesheet" />
     <style>
       body {
@@ -237,6 +238,7 @@
           `;
         }
 
+        // Full Wash yang gajinya sudah dibayar langsung tidak masuk payroll bulanan.
         if (transaction.direct_employee_pay) {
           return `
             <div class="flex flex-wrap gap-2">
@@ -282,6 +284,8 @@
         const isNonTarget = transaction.service_category === "non_target";
         const rowClass = isNonTarget ? "bg-rose-50/70 hover:bg-rose-50" : "hover:bg-slate-50";
         const vehicleLabel = `${transaction.vehicle_type || "-"} ${transaction.vehicle_size || ""}`.trim();
+        // Label "Langsung" berarti angka gaji berasal dari input kasir,
+        // sedangkan "Sistem" berarti dihitung dari aturan payroll dan bonus.
         const payLabel = transaction.direct_employee_pay ? "Langsung" : "Sistem";
 
         return `
@@ -385,6 +389,7 @@
           document.getElementById("statHours").innerText = `${summary.startTime || "--:--"} - ${summary.lastTime || "--:--"}`;
           document.getElementById("statNonTarget").innerText = formatIDR(nonTargetTotal);
           document.getElementById("statNonTargetCount").innerText = `${nonTargetTransactions.length} transaksi`;
+          // Pendapatan bersih sudah dikurangi pengeluaran harian dan beban gaji karyawan.
           document.getElementById("statEmployeePay").innerText = formatIDR(summary.employeePayExpense);
           document.getElementById("statProfit").innerText = formatIDR(summary.netRevenue);
           if (user.role === "owner") {
